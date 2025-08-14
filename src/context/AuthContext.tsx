@@ -34,6 +34,11 @@ const ACCOUNTS = {
     password: process.env.REACT_APP_ACCOUNT3_PASSWORD || 'password3',
     sellingPoint: 'farmacia3',
     displayName: process.env.REACT_APP_ACCOUNT3_DISPLAY_NAME || 'Farmacia Sur'
+  },
+  [process.env.REACT_APP_ACCOUNT4_USERNAME || 'farmacia4']: {
+    password: process.env.REACT_APP_ACCOUNT4_PASSWORD || 'password4',
+    sellingPoint: 'farmacia4',
+    displayName: process.env.REACT_APP_ACCOUNT4_DISPLAY_NAME || 'Farmacia Cuatro'
   }
 };
 

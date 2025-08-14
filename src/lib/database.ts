@@ -3,6 +3,19 @@ import { Encargo, Persona, Producto, Laboratorio, Almacen, NewEncargoForm, Updat
 
 const sql = neon(process.env.REACT_APP_DATABASE_URL || '');
 
+// Helper function to create date without timezone adjustment
+const createDateFromString = (dateString: string | null): Date => {
+  if (!dateString) return new Date();
+  
+  // For date-only strings (YYYY-MM-DD), create date in local timezone to avoid UTC shift
+  if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day); // month is 0-indexed in JS
+  }
+  
+  return new Date(dateString);
+};
+
 export class DatabaseService {
   private sellingPoint: string;
 
@@ -22,7 +35,7 @@ export class DatabaseService {
     `;
     return result.map(row => ({
       ...row,
-      fecha: row.fecha ? new Date(row.fecha) : new Date(),
+      fecha: createDateFromString(row.fecha),
       created_at: row.created_at ? new Date(row.created_at) : new Date(),
       updated_at: row.updated_at ? new Date(row.updated_at) : new Date(),
       pagado: typeof row.pagado === 'string' ? parseFloat(row.pagado) || 0 : (row.pagado || 0)
@@ -44,7 +57,7 @@ export class DatabaseService {
     const row = result[0];
     return {
       ...row,
-      fecha: new Date(row.fecha),
+      fecha: createDateFromString(row.fecha),
       created_at: new Date(row.created_at),
       updated_at: new Date(row.updated_at),
       pagado: typeof row.pagado === 'string' ? parseFloat(row.pagado) || 0 : (row.pagado || 0)
@@ -73,7 +86,7 @@ export class DatabaseService {
     const row = result[0];
     return {
       ...row,
-      fecha: new Date(row.fecha),
+      fecha: createDateFromString(row.fecha),
       created_at: new Date(row.created_at),
       updated_at: new Date(row.updated_at),
       pagado: typeof row.pagado === 'string' ? parseFloat(row.pagado) || 0 : (row.pagado || 0)
@@ -205,7 +218,7 @@ export class DatabaseService {
     `;
     return result.map(row => ({
       ...row,
-      fecha: new Date(row.fecha),
+      fecha: createDateFromString(row.fecha),
       created_at: new Date(row.created_at),
       updated_at: new Date(row.updated_at),
       pagado: typeof row.pagado === 'string' ? parseFloat(row.pagado) || 0 : (row.pagado || 0)

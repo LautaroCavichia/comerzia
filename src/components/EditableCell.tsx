@@ -5,7 +5,7 @@ interface EditableCellProps {
   onSave: (value: string) => void;
   isEditing: boolean;
   onEdit: () => void;
-  type?: 'text' | 'date' | 'tel';
+  type?: 'text' | 'date' | 'tel' | 'number';
   multiline?: boolean;
 }
 
@@ -33,6 +33,18 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     setEditValue(value);
   }, [value]);
 
+  const formatDateForInput = (val: string) => {
+    if (type === 'date' && val) {
+      try {
+        const date = new Date(val);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split('T')[0];
+        }
+      } catch {}
+    }
+    return val;
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !multiline) {
       e.preventDefault();
@@ -59,9 +71,16 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     if (type === 'date' && val) {
       try {
         const date = new Date(val);
-        return date.toLocaleDateString('es-ES');
+        if (isNaN(date.getTime())) {
+          return 'Fecha inválida';
+        }
+        return date.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
       } catch {
-        return val;
+        return 'Fecha inválida';
       }
     }
     return val;
@@ -70,7 +89,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   if (isEditing) {
     const commonProps = {
       ref: inputRef as any,
-      value: editValue,
+      value: type === 'date' ? formatDateForInput(editValue) : editValue,
       onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setEditValue(e.target.value),
       onKeyDown: handleKeyDown,
       onBlur: handleSave,
@@ -91,7 +110,9 @@ export const EditableCell: React.FC<EditableCellProps> = ({
       <input
         {...commonProps}
         type={type}
-        placeholder={type === 'tel' ? '+34...' : ''}
+        step={type === 'number' ? '0.01' : undefined}
+        min={type === 'number' ? '0' : undefined}
+        placeholder={type === 'tel' ? '+34...' : type === 'number' ? '0.00' : ''}
       />
     );
   }

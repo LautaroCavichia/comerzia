@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Encargo } from '../types';
 import { EditableCell } from './EditableCell';
 import { ToggleCell } from './ToggleCell';
-import { db } from '../lib/database';
+import { useDatabase } from '../context/DatabaseContext';
 
 interface EncargosTableProps {
   encargos: Encargo[];
@@ -15,6 +15,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
   onUpdate,
   onDelete
 }) => {
+  const { db } = useDatabase();
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
 
   const handleCellEdit = async (id: string, field: string, value: any) => {
@@ -86,6 +87,9 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Recibido
               </th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Entregado
+              </th>
               <th className="px-3 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
                 Persona
               </th>
@@ -96,7 +100,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                 Avisado
               </th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Pagado
+                Pagado (€)
               </th>
               <th className="px-3 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
                 Observaciones
@@ -114,8 +118,16 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
               >
                 <td className="px-3 py-4 whitespace-nowrap text-sm">
                   <EditableCell
-                    value={encargo.fecha.toLocaleDateString('es-ES')}
-                    onSave={(value) => handleCellEdit(encargo.id, 'fecha', new Date(value))}
+                    value={encargo.fecha instanceof Date && !isNaN(encargo.fecha.getTime()) 
+                      ? encargo.fecha.toISOString().split('T')[0] 
+                      : new Date().toISOString().split('T')[0]
+                    }
+                    onSave={(value) => {
+                      const date = new Date(value);
+                      if (!isNaN(date.getTime())) {
+                        handleCellEdit(encargo.id, 'fecha', date);
+                      }
+                    }}
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'fecha'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'fecha' })}
                     type="date"
@@ -163,6 +175,13 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                   />
                 </td>
                 
+                <td className="px-3 py-4 whitespace-nowrap text-center">
+                  <ToggleCell
+                    value={encargo.entregado}
+                    onChange={(value) => handleCellEdit(encargo.id, 'entregado', value)}
+                  />
+                </td>
+                
                 <td className="px-3 py-4 whitespace-nowrap text-sm">
                   <EditableCell
                     value={encargo.persona}
@@ -190,9 +209,17 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                 </td>
                 
                 <td className="px-3 py-4 whitespace-nowrap text-center">
-                  <ToggleCell
-                    value={encargo.pagado}
-                    onChange={(value) => handleCellEdit(encargo.id, 'pagado', value)}
+                  <EditableCell
+                    value={encargo.pagado.toString()}
+                    onSave={(value) => {
+                      const numValue = parseFloat(value);
+                      if (!isNaN(numValue) && numValue >= 0) {
+                        handleCellEdit(encargo.id, 'pagado', numValue);
+                      }
+                    }}
+                    isEditing={editingCell?.id === encargo.id && editingCell?.field === 'pagado'}
+                    onEdit={() => setEditingCell({ id: encargo.id, field: 'pagado' })}
+                    type="number"
                   />
                 </td>
                 

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import DatePicker from 'react-datepicker';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
-import { db } from '../lib/database';
+import { useDatabase } from '../context/DatabaseContext';
 import { Persona, Producto, Laboratorio, Almacen } from '../types';
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -15,10 +15,11 @@ const encargoSchema = z.object({
   almacen: z.string().min(1, 'El almacén es requerido'),
   pedido: z.boolean(),
   recibido: z.boolean(),
+  entregado: z.boolean(),
   persona: z.string().min(1, 'La persona es requerida'),
   telefono: z.string().min(1, 'El teléfono es requerido'),
   avisado: z.boolean(),
-  pagado: z.boolean(),
+  pagado: z.number().min(0, 'El precio debe ser positivo'),
   observaciones: z.string().optional()
 });
 
@@ -33,6 +34,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
   onClose,
   onSuccess
 }) => {
+  const { db } = useDatabase();
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [laboratorios, setLaboratorios] = useState<Laboratorio[]>([]);
@@ -51,8 +53,9 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
       fecha: new Date(),
       pedido: false,
       recibido: false,
+      entregado: false,
       avisado: false,
-      pagado: false
+      pagado: 0
     }
   });
 
@@ -362,42 +365,61 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
             </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <label className="flex items-center">
-                <input
-                  {...register('pedido')}
-                  type="checkbox"
-                  className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Pedido</span>
-              </label>
+            <div className="mt-6 space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <label className="flex items-center">
+                  <input
+                    {...register('pedido')}
+                    type="checkbox"
+                    className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Pedido</span>
+                </label>
 
-              <label className="flex items-center">
-                <input
-                  {...register('recibido')}
-                  type="checkbox"
-                  className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Recibido</span>
-              </label>
+                <label className="flex items-center">
+                  <input
+                    {...register('recibido')}
+                    type="checkbox"
+                    className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Recibido</span>
+                </label>
 
-              <label className="flex items-center">
-                <input
-                  {...register('avisado')}
-                  type="checkbox"
-                  className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Avisado</span>
-              </label>
+                <label className="flex items-center">
+                  <input
+                    {...register('entregado')}
+                    type="checkbox"
+                    className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Entregado</span>
+                </label>
 
-              <label className="flex items-center">
+                <label className="flex items-center">
+                  <input
+                    {...register('avisado')}
+                    type="checkbox"
+                    className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Avisado</span>
+                </label>
+              </div>
+
+              <div>
+                <label className="form-label">
+                  Precio Pagado (€)
+                </label>
                 <input
-                  {...register('pagado')}
-                  type="checkbox"
-                  className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
+                  {...register('pagado', { valueAsNumber: true })}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  className="input-field w-full"
                 />
-                <span className="ml-2 text-sm text-gray-700">Pagado</span>
-              </label>
+                {errors.pagado && (
+                  <p className="mt-1 text-sm text-red-600">{errors.pagado.message}</p>
+                )}
+              </div>
             </div>
 
             <div className="mt-6 flex justify-end space-x-3">

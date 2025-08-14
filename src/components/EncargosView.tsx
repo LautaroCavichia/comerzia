@@ -3,14 +3,16 @@ import { Encargo } from '../types';
 import { EncargosTable } from './EncargosTable';
 import { SearchBar } from './SearchBar';
 import { AddEncargoModal } from './AddEncargoModal';
-import { db } from '../lib/database';
+import { useDatabase } from '../context/DatabaseContext';
 
 export const EncargosView: React.FC = () => {
+  const { db } = useDatabase();
   const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [filteredEncargos, setFilteredEncargos] = useState<Encargo[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState<'all' | 'thisMonth'>('all');
+  const [showDelivered, setShowDelivered] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +22,7 @@ export const EncargosView: React.FC = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [searchQuery, dateFilter, encargos]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchQuery, dateFilter, showDelivered, encargos]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadEncargos = async () => {
     try {
@@ -54,9 +56,15 @@ export const EncargosView: React.FC = () => {
         
         results = results.filter(encargo => {
           const encargoDate = new Date(encargo.fecha);
-          return encargoDate.getMonth() === currentMonth && 
+          return !isNaN(encargoDate.getTime()) && 
+                 encargoDate.getMonth() === currentMonth && 
                  encargoDate.getFullYear() === currentYear;
         });
+      }
+
+      // Apply delivered orders filter
+      if (!showDelivered) {
+        results = results.filter(encargo => !encargo.entregado);
       }
       
       setFilteredEncargos(results);
@@ -81,21 +89,26 @@ export const EncargosView: React.FC = () => {
     }
 
     const csvHeaders = [
-      'Fecha', 'Producto', 'Laboratorio', 'Almacén', 'Pedido', 'Recibido',
-      'Persona', 'Teléfono', 'Avisado', 'Pagado', 'Observaciones'
+      'Fecha', 'Producto', 'Laboratorio', 'Almacén', 'Pedido', 'Recibido', 'Entregado',
+      'Persona', 'Teléfono', 'Avisado', 'Pagado (€)', 'Observaciones'
     ];
 
     const csvData = filteredEncargos.map(encargo => [
-      encargo.fecha.toLocaleDateString('es-ES'),
+      encargo.fecha instanceof Date && !isNaN(encargo.fecha.getTime()) 
+        ? encargo.fecha.toLocaleDateString('es-ES') 
+        : 'Fecha inválida',
       encargo.producto,
       encargo.laboratorio,
       encargo.almacen,
       encargo.pedido ? 'Sí' : 'No',
       encargo.recibido ? 'Sí' : 'No',
+      encargo.entregado ? 'Sí' : 'No',
       encargo.persona,
       encargo.telefono,
       encargo.avisado ? 'Sí' : 'No',
-      encargo.pagado ? 'Sí' : 'No',
+      (typeof encargo.pagado === 'number' && !isNaN(encargo.pagado)) 
+        ? encargo.pagado.toFixed(2) 
+        : '0.00',
       encargo.observaciones || ''
     ]);
 
@@ -177,6 +190,24 @@ export const EncargosView: React.FC = () => {
         </div>
 
         <div className="flex gap-3">
+          <button
+            onClick={() => setShowDelivered(!showDelivered)}
+            className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              showDelivered
+                ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200 focus:ring-green-500'
+                : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 focus:ring-gray-500'
+            }`}
+          >
+            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {showDelivered ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              )}
+            </svg>
+            {showDelivered ? 'Ocultar Entregados' : 'Mostrar Entregados'}
+          </button>
+
           <button
             onClick={handleExportCSV}
             className="btn-secondary inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2"

@@ -21,15 +21,15 @@
   }
 
   h1 {
-    @apply text-3xl font-bold;
+    @apply text-3xl font-semibold tracking-tight;
   }
 
   h2 {
-    @apply text-2xl font-semibold;
+    @apply text-2xl font-semibold tracking-tight;
   }
 
   h3 {
-    @apply text-xl font-medium;
+    @apply text-xl font-semibold tracking-tight;
   }
 
   input, select, textarea {
@@ -38,29 +38,73 @@
 }
 
 @layer components {
+  /* Clean Glassmorphism Components */
+  .glass-header {
+    @apply bg-white/95 backdrop-blur-xl border-white/20;
+  }
+
+  .glass-footer {
+    @apply bg-white/95 backdrop-blur-xl;
+  }
+
+  .glass-badge {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 rounded-2xl p-6 transition-all duration-200;
+  }
+
+  .glass-icon {
+    @apply bg-white/80 backdrop-blur-md;
+  }
+
+  /* Clean Apple-style buttons and inputs */
   .btn-primary {
-    @apply bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500 transition-all duration-200 ease-smooth;
+    @apply bg-primary-500 text-white hover:bg-primary-600 focus:ring-2 focus:ring-primary-500/20 rounded-xl px-4 py-2.5 font-medium transition-colors border-0 shadow-sm;
   }
 
   .btn-secondary {
-    @apply bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-primary-500 transition-all duration-200 ease-smooth;
+    @apply glass-card border border-white/30 text-gray-700 hover:bg-white/40 focus:ring-2 focus:ring-primary-500/20 rounded-xl px-4 py-2.5 font-medium transition-all;
   }
 
   .input-field {
-    @apply border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ease-smooth bg-white/80 backdrop-blur-sm;
+    @apply glass-card border border-white/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/30 transition-all placeholder:text-gray-400;
   }
 
   .input-field:focus {
-    @apply bg-white shadow-sm;
+    @apply bg-white/90 shadow-sm border-primary-500/50;
+  }
+
+  .input-field::placeholder {
+    @apply text-gray-400;
+  }
+
+  /* Custom styles for date picker */
+  .react-datepicker-wrapper {
+    @apply w-full;
+  }
+
+  .react-datepicker__input-container input {
+    @apply input-field;
+  }
+
+  /* Logo styling */
+  .logo-image {
+    @apply transition-transform hover:scale-105;
+  }
+
+  .logo-image:hover {
+    filter: brightness(1.1);
   }
 
   .select-field {
-    @apply input-field appearance-none bg-white/90 cursor-pointer;
+    @apply input-field appearance-none cursor-pointer;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
+    background-position: right 1rem center;
     background-repeat: no-repeat;
     background-size: 1.5em 1.5em;
-    padding-right: 2.5rem;
+    padding-right: 3rem;
   }
 
   .select-field:focus {
@@ -68,31 +112,44 @@
   }
 
   .card {
-    @apply bg-card-gradient rounded-xl shadow-sm border border-gray-200/50 transition-all duration-200 ease-smooth hover:shadow-md backdrop-blur-sm;
+    @apply glass-card shadow-sm hover:shadow-md transition-all;
   }
 
   .table-row {
-    @apply transition-colors duration-150 ease-smooth hover:bg-gray-50;
+    @apply transition-colors hover:bg-white/60 backdrop-blur-sm;
   }
 
   .modal-overlay {
-    @apply fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-smooth backdrop-blur-sm;
+    @apply fixed inset-0 bg-black/40 backdrop-blur-sm;
+    animation: fadeIn 0.2s ease-out;
   }
 
   .modal-content {
-    @apply transform transition-all duration-300 ease-smooth bg-card-gradient;
+    @apply glass-card shadow-2xl;
+    animation: modalSlideIn 0.3s ease-out;
+  }
+
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
   }
 
   .form-label {
-    @apply block text-sm font-medium text-gray-700 mb-1 font-display;
+    @apply block text-sm font-medium text-gray-700 mb-2 font-display;
   }
 
   .form-section {
-    @apply space-y-4;
+    @apply space-y-6;
   }
 
   .checkbox-field {
-    @apply rounded-md border-gray-300 text-primary-500 focus:ring-primary-500 focus:ring-2 transition-all duration-200 ease-smooth;
+    @apply rounded-md border-gray-300 text-primary-500 focus:ring-primary-500 focus:ring-2 transition-colors;
   }
 
   .datalist-input {

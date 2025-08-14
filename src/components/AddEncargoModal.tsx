@@ -41,6 +41,14 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
   const [almacenes, setAlmacenes] = useState<Almacen[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -183,262 +191,302 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={onClose} />
-
-        <div className="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transform bg-white shadow-xl rounded-xl border animate-scale-in">
-          <div className="bg-white px-6 pt-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">Nuevo Encargo</h3>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+      <div className="modal-overlay fixed inset-0" onClick={onClose} />
+      
+      <div className="modal-content relative w-full max-w-5xl h-[90vh] flex flex-col bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+        {/* Header */}
+        <div className="flex-shrink-0 px-6 sm:px-8 py-6 border-b border-gray-200/50 bg-white/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-display font-semibold text-gray-900 tracking-tight">Nuevo Encargo</h2>
+              <p className="text-sm text-gray-500 mt-1">Complete la información del encargo</p>
             </div>
+            <button
+              onClick={onClose}
+              className="p-2.5 rounded-full hover:bg-gray-100/80 transition-colors group"
+              type="button"
+            >
+              <svg className="h-5 w-5 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-4">
-            <div className="form-section">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="form-label">
-                  Fecha *
-                </label>
-                <DatePicker
-                  selected={watchedFecha}
-                  onChange={(date: Date | null) => date && setValue('fecha', date)}
-                  dateFormat="dd/MM/yyyy"
-                  className="input-field w-full"
-                />
-                {errors.fecha && (
-                  <p className="mt-1 text-sm text-red-600">{errors.fecha.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="form-label">
-                  Producto *
-                </label>
-                <div className="flex">
-                  <input
-                    {...register('producto')}
-                    list="productos"
-                    className="flex-1 input-field rounded-l-lg rounded-r-none border-r-0"
-                    placeholder="Escribir o seleccionar..."
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          <form onSubmit={handleSubmit(onSubmit)} className="px-6 sm:px-8 py-8">
+            {/* Basic Information Section */}
+            <div className="mb-10">
+              <h3 className="text-lg font-display font-medium text-gray-900 mb-6">Información Básica</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Fecha *</label>
+                  <DatePicker
+                    selected={watchedFecha}
+                    onChange={(date: Date | null) => date && setValue('fecha', date)}
+                    dateFormat="dd/MM/yyyy"
+                    className="w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                    placeholderText="Seleccionar fecha"
                   />
-                  <datalist id="productos">
-                    {productos.map(producto => (
-                      <option key={producto.id} value={producto.nombre} />
-                    ))}
-                  </datalist>
-                  <button
-                    type="button"
-                    onClick={() => handleNewItem('producto')}
-                    className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg hover:bg-primary-50 hover:border-primary-200 text-sm transition-all duration-200 ease-smooth"
-                  >
-                    Nuevo...
-                  </button>
+                  {errors.fecha && (
+                    <p className="text-xs text-red-500">{errors.fecha.message}</p>
+                  )}
                 </div>
-                {errors.producto && (
-                  <p className="mt-1 text-sm text-red-600">{errors.producto.message}</p>
-                )}
-              </div>
 
-              <div>
-                <label className="form-label">
-                  Laboratorio *
-                </label>
-                <div className="flex">
-                  <input
-                    {...register('laboratorio')}
-                    list="laboratorios"
-                    className="flex-1 input-field rounded-l-lg rounded-r-none border-r-0"
-                    placeholder="Escribir o seleccionar..."
-                  />
-                  <datalist id="laboratorios">
-                    {laboratorios.map(laboratorio => (
-                      <option key={laboratorio.id} value={laboratorio.nombre} />
-                    ))}
-                  </datalist>
-                  <button
-                    type="button"
-                    onClick={() => handleNewItem('laboratorio')}
-                    className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg hover:bg-primary-50 hover:border-primary-200 text-sm transition-all duration-200 ease-smooth"
-                  >
-                    Nuevo...
-                  </button>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Producto *</label>
+                  <div className="relative">
+                    <input
+                      {...register('producto')}
+                      list="productos"
+                      className="w-full px-4 py-3.5 pr-20 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                      placeholder="Escribir o seleccionar producto"
+                    />
+                    <datalist id="productos">
+                      {productos.map(producto => (
+                        <option key={producto.id} value={producto.nombre} />
+                      ))}
+                    </datalist>
+                    <button
+                      type="button"
+                      onClick={() => handleNewItem('producto')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50/80 rounded-lg transition-colors"
+                    >
+                      + Nuevo
+                    </button>
+                  </div>
+                  {errors.producto && (
+                    <p className="text-xs text-red-500">{errors.producto.message}</p>
+                  )}
                 </div>
-                {errors.laboratorio && (
-                  <p className="mt-1 text-sm text-red-600">{errors.laboratorio.message}</p>
-                )}
-              </div>
 
-              <div>
-                <label className="form-label">
-                  Almacén *
-                </label>
-                <div className="flex">
-                  <input
-                    {...register('almacen')}
-                    list="almacenes"
-                    className="flex-1 input-field rounded-l-lg rounded-r-none border-r-0"
-                    placeholder="Escribir o seleccionar..."
-                  />
-                  <datalist id="almacenes">
-                    {almacenes.map(almacen => (
-                      <option key={almacen.id} value={almacen.nombre} />
-                    ))}
-                  </datalist>
-                  <button
-                    type="button"
-                    onClick={() => handleNewItem('almacen')}
-                    className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg hover:bg-primary-50 hover:border-primary-200 text-sm transition-all duration-200 ease-smooth"
-                  >
-                    Nuevo...
-                  </button>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Laboratorio *</label>
+                  <div className="relative">
+                    <input
+                      {...register('laboratorio')}
+                      list="laboratorios"
+                      className="w-full px-4 py-3.5 pr-20 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                      placeholder="Escribir o seleccionar laboratorio"
+                    />
+                    <datalist id="laboratorios">
+                      {laboratorios.map(laboratorio => (
+                        <option key={laboratorio.id} value={laboratorio.nombre} />
+                      ))}
+                    </datalist>
+                    <button
+                      type="button"
+                      onClick={() => handleNewItem('laboratorio')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50/80 rounded-lg transition-colors"
+                    >
+                      + Nuevo
+                    </button>
+                  </div>
+                  {errors.laboratorio && (
+                    <p className="text-xs text-red-500">{errors.laboratorio.message}</p>
+                  )}
                 </div>
-                {errors.almacen && (
-                  <p className="mt-1 text-sm text-red-600">{errors.almacen.message}</p>
-                )}
-              </div>
 
-              <div>
-                <label className="form-label">
-                  Persona *
-                </label>
-                <div className="flex">
-                  <input
-                    {...register('persona')}
-                    list="personas"
-                    className="flex-1 input-field rounded-l-lg rounded-r-none border-r-0"
-                    placeholder="Escribir o seleccionar..."
-                  />
-                  <datalist id="personas">
-                    {personas.map(persona => (
-                      <option key={persona.id} value={persona.nombre} />
-                    ))}
-                  </datalist>
-                  <button
-                    type="button"
-                    onClick={() => handleNewItem('persona')}
-                    className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg hover:bg-primary-50 hover:border-primary-200 text-sm transition-all duration-200 ease-smooth"
-                  >
-                    Nueva...
-                  </button>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Almacén *</label>
+                  <div className="relative">
+                    <input
+                      {...register('almacen')}
+                      list="almacenes"
+                      className="w-full px-4 py-3.5 pr-20 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                      placeholder="Escribir o seleccionar almacén"
+                    />
+                    <datalist id="almacenes">
+                      {almacenes.map(almacen => (
+                        <option key={almacen.id} value={almacen.nombre} />
+                      ))}
+                    </datalist>
+                    <button
+                      type="button"
+                      onClick={() => handleNewItem('almacen')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50/80 rounded-lg transition-colors"
+                    >
+                      + Nuevo
+                    </button>
+                  </div>
+                  {errors.almacen && (
+                    <p className="text-xs text-red-500">{errors.almacen.message}</p>
+                  )}
                 </div>
-                {errors.persona && (
-                  <p className="mt-1 text-sm text-red-600">{errors.persona.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="form-label">
-                  Teléfono *
-                </label>
-                <input
-                  {...register('telefono')}
-                  type="tel"
-                  placeholder="+34612345678"
-                  className="input-field w-full"
-                />
-                {errors.telefono && (
-                  <p className="mt-1 text-sm text-red-600">{errors.telefono.message}</p>
-                )}
-              </div>
-              </div>
-
-              <div>
-                <label className="form-label">
-                Observaciones
-              </label>
-              <textarea
-                {...register('observaciones')}
-                rows={3}
-                placeholder="Información adicional..."
-                className="input-field w-full"
-              />
-            </div>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <label className="flex items-center">
-                  <input
-                    {...register('pedido')}
-                    type="checkbox"
-                    className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Pedido</span>
-                </label>
-
-                <label className="flex items-center">
-                  <input
-                    {...register('recibido')}
-                    type="checkbox"
-                    className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Recibido</span>
-                </label>
-
-                <label className="flex items-center">
-                  <input
-                    {...register('entregado')}
-                    type="checkbox"
-                    className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Entregado</span>
-                </label>
-
-                <label className="flex items-center">
-                  <input
-                    {...register('avisado')}
-                    type="checkbox"
-                    className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 transition-colors duration-200"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Avisado</span>
-                </label>
-              </div>
-
-              <div>
-                <label className="form-label">
-                  Precio Pagado (€)
-                </label>
-                <input
-                  {...register('pagado', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  className="input-field w-full"
-                />
-                {errors.pagado && (
-                  <p className="mt-1 text-sm text-red-600">{errors.pagado.message}</p>
-                )}
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="btn-secondary px-4 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary px-4 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Guardando...' : 'Guardar Encargo'}
-              </button>
+            {/* Contact Information Section */}
+            <div className="mb-10">
+              <h3 className="text-lg font-display font-medium text-gray-900 mb-6">Información de Contacto</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Persona *</label>
+                  <div className="relative">
+                    <input
+                      {...register('persona')}
+                      list="personas"
+                      className="w-full px-4 py-3.5 pr-20 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                      placeholder="Escribir o seleccionar persona"
+                    />
+                    <datalist id="personas">
+                      {personas.map(persona => (
+                        <option key={persona.id} value={persona.nombre} />
+                      ))}
+                    </datalist>
+                    <button
+                      type="button"
+                      onClick={() => handleNewItem('persona')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50/80 rounded-lg transition-colors"
+                    >
+                      + Nueva
+                    </button>
+                  </div>
+                  {errors.persona && (
+                    <p className="text-xs text-red-500">{errors.persona.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Teléfono *</label>
+                  <input
+                    {...register('telefono')}
+                    type="tel"
+                    placeholder="+34 612 345 678"
+                    className="w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                  />
+                  {errors.telefono && (
+                    <p className="text-xs text-red-500">{errors.telefono.message}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Status & Payment Section */}
+            <div className="mb-10">
+              <h3 className="text-lg font-display font-medium text-gray-900 mb-6">Estado y Pago</h3>
+              <div className="space-y-8">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <label className="group cursor-pointer">
+                    <div className="p-4 bg-gray-50/50 border border-gray-200/80 rounded-xl hover:bg-gray-100/50 transition-colors">
+                      <div className="flex items-center">
+                        <input
+                          {...register('pedido')}
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500/20 transition-colors"
+                        />
+                        <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Pedido</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="group cursor-pointer">
+                    <div className="p-4 bg-gray-50/50 border border-gray-200/80 rounded-xl hover:bg-gray-100/50 transition-colors">
+                      <div className="flex items-center">
+                        <input
+                          {...register('recibido')}
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500/20 transition-colors"
+                        />
+                        <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Recibido</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="group cursor-pointer">
+                    <div className="p-4 bg-gray-50/50 border border-gray-200/80 rounded-xl hover:bg-gray-100/50 transition-colors">
+                      <div className="flex items-center">
+                        <input
+                          {...register('entregado')}
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500/20 transition-colors"
+                        />
+                        <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Entregado</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="group cursor-pointer">
+                    <div className="p-4 bg-gray-50/50 border border-gray-200/80 rounded-xl hover:bg-gray-100/50 transition-colors">
+                      <div className="flex items-center">
+                        <input
+                          {...register('avisado')}
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500/20 transition-colors"
+                        />
+                        <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Avisado</span>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Precio Pagado (€)</label>
+                    <div className="relative">
+                      <input
+                        {...register('pagado', { valueAsNumber: true })}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-4 py-3.5 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                      />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-400 text-sm">€</span>
+                      </div>
+                    </div>
+                    {errors.pagado && (
+                      <p className="text-xs text-red-500">{errors.pagado.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Observaciones</label>
+                    <textarea
+                      {...register('observaciones')}
+                      rows={4}
+                      placeholder="Información adicional sobre el encargo..."
+                      className="w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </form>
+        </div>
+
+        {/* Footer - Fixed */}
+        <div className="flex-shrink-0 px-6 sm:px-8 py-6 bg-white/50 border-t border-gray-200/50">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4 space-y-3 space-y-reverse sm:space-y-0">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors rounded-xl hover:bg-gray-100/50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              onClick={handleSubmit(onSubmit)}
+              className="px-8 py-3 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all shadow-sm hover:shadow-md disabled:hover:shadow-sm"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Guardando...
+                </div>
+              ) : (
+                'Guardar Encargo'
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

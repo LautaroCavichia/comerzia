@@ -152,7 +152,7 @@ export const EncargosView: React.FC = () => {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="glass-card border border-red-200/30 p-4 bg-red-50/50">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -192,10 +192,10 @@ export const EncargosView: React.FC = () => {
         <div className="flex gap-3">
           <button
             onClick={() => setShowDelivered(!showDelivered)}
-            className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+            className={`inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all focus:outline-none focus:ring-2 ${
               showDelivered
-                ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200 focus:ring-green-500'
-                : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 focus:ring-gray-500'
+                ? 'glass-card bg-green-50/50 text-green-700 border border-green-200/30 hover:bg-green-100/50 focus:ring-green-500/20'
+                : 'glass-card text-gray-700 border border-white/30 hover:bg-white/40 focus:ring-primary-500/20'
             }`}
           >
             <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,7 +210,7 @@ export const EncargosView: React.FC = () => {
 
           <button
             onClick={handleExportCSV}
-            className="btn-secondary inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="btn-secondary inline-flex items-center focus:outline-none"
           >
             <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -220,7 +220,7 @@ export const EncargosView: React.FC = () => {
 
           <button
             onClick={handleAddEncargo}
-            className="btn-primary inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="btn-primary inline-flex items-center focus:outline-none"
           >
             <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

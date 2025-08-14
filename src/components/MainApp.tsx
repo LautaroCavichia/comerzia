@@ -24,19 +24,19 @@ export const MainApp: React.FC = () => {
   return (
     <DatabaseProvider>
       <div className="min-h-screen bg-subtle-pattern">
-        <header className="bg-header-gradient backdrop-blur-sm shadow-sm border-b border-primary-100 sticky top-0 z-40">
+        <header className="glass-header border-b border-white/20 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-4 flex items-center justify-between">
               <div className="flex items-center space-x-6">
                 <button
                   onClick={handleBackToHome}
-                  className="flex items-center space-x-2 group"
+                  className="flex items-center space-x-3 group"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                    </svg>
-                  </div>
+                  <img 
+                    src="/logo.png" 
+                    alt="Comerzia Logo" 
+                    className="w-8 h-8 rounded-lg object-contain logo-image"
+                  />
                   <div>
                     <h1 className="text-xl font-bold text-gray-900 bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
                       Comerzia
@@ -49,10 +49,10 @@ export const MainApp: React.FC = () => {
                 <nav className="hidden md:flex space-x-1">
                   <button
                     onClick={() => setCurrentView('dashboard')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                       currentView === 'dashboard'
-                        ? 'bg-primary-100 text-primary-700 shadow-sm'
-                        : 'text-gray-600 hover:text-primary-600 hover:bg-primary-50'
+                        ? 'glass-badge text-primary-700'
+                        : 'text-gray-600 hover:text-primary-600 hover:bg-white/30'
                     }`}
                   >
                     <div className="flex items-center space-x-2">
@@ -64,10 +64,10 @@ export const MainApp: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setCurrentView('encargos')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                       currentView === 'encargos'
-                        ? 'bg-primary-100 text-primary-700 shadow-sm'
-                        : 'text-gray-600 hover:text-primary-600 hover:bg-primary-50'
+                        ? 'glass-badge text-primary-700'
+                        : 'text-gray-600 hover:text-primary-600 hover:bg-white/30'
                     }`}
                   >
                     <div className="flex items-center space-x-2">
@@ -87,7 +87,7 @@ export const MainApp: React.FC = () => {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors duration-200"
+                  className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -100,15 +100,15 @@ export const MainApp: React.FC = () => {
         </header>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden bg-white border-b border-gray-200">
+        <div className="md:hidden glass-footer border-b border-white/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex space-x-1 py-2">
               <button
                 onClick={() => setCurrentView('dashboard')}
-                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                   currentView === 'dashboard'
-                    ? 'bg-primary-100 text-primary-700 shadow-sm'
-                    : 'text-gray-600 hover:text-primary-600 hover:bg-primary-50'
+                    ? 'glass-badge text-primary-700'
+                    : 'text-gray-600 hover:text-primary-600 hover:bg-white/30'
                 }`}
               >
                 <div className="flex items-center justify-center space-x-2">
@@ -120,10 +120,10 @@ export const MainApp: React.FC = () => {
               </button>
               <button
                 onClick={() => setCurrentView('encargos')}
-                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                   currentView === 'encargos'
-                    ? 'bg-primary-100 text-primary-700 shadow-sm'
-                    : 'text-gray-600 hover:text-primary-600 hover:bg-primary-50'
+                    ? 'glass-badge text-primary-700'
+                    : 'text-gray-600 hover:text-primary-600 hover:bg-white/30'
                 }`}
               >
                 <div className="flex items-center justify-center space-x-2">
@@ -137,7 +137,7 @@ export const MainApp: React.FC = () => {
           </div>
         </div>
         
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {currentView === 'dashboard' ? <Dashboard /> : <EncargosView />}
         </main>
       </div>

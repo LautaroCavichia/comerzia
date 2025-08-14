@@ -64,57 +64,57 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
   }
 
   return (
-    <div className="card overflow-hidden animate-fade-in">
+    <div className="card overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-primary-50 sticky top-0">
+        <table className="min-w-full divide-y divide-white/20">
+          <thead className="glass-badge sticky top-0 backdrop-blur-md">
             <tr>
-              <th className="px-3 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
                 Fecha
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
                 Producto
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
                 Laboratorio
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
                 Almacén
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider">
                 Pedido
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider">
                 Recibido
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider">
                 Entregado
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
                 Persona
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
                 Teléfono
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider">
                 Avisado
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider">
                 Pagado (€)
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
                 Observaciones
               </th>
-              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-600 tracking-wider">
                 Acciones
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-white/20">
             {encargos.map((encargo, index) => (
               <tr
                 key={encargo.id}
-                className={`table-row animate-slide-up ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                className="table-row"
               >
                 <td className="px-3 py-4 whitespace-nowrap text-sm">
                   <EditableCell

@@ -20,10 +20,43 @@ module.exports = {
           900: '#7c2d12',
           950: '#431407',
         },
-        accent: {
-          orange: '#f97316',
-          'orange-light': '#fb923c',
-          'orange-dark': '#ea580c',
+        zen: {
+          orange: {
+            50: '#fff8f1',
+            100: '#feecdc',
+            200: '#fcd9bd',
+            300: '#fdba74',
+            400: '#fb923c',
+            500: '#f97316',
+            600: '#ea580c',
+            700: '#c2410c',
+            800: '#9a3412',
+            900: '#7c2d12',
+          },
+          teal: {
+            50: '#f0fdfa',
+            100: '#ccfbf1',
+            200: '#99f6e4',
+            300: '#5eead4',
+            400: '#2dd4bf',
+            500: '#14b8a6',
+            600: '#0d9488',
+            700: '#0f766e',
+            800: '#115e59',
+            900: '#134e4a',
+          },
+          sage: {
+            50: '#f8faf9',
+            100: '#f1f5f3',
+            200: '#e1ebe5',
+            300: '#c9d9d0',
+            400: '#a8c0b0',
+            500: '#7a9b85',
+            600: '#5a7c64',
+            700: '#4a6551',
+            800: '#3d5342',
+            900: '#334538',
+          },
         },
       },
       fontFamily: {
@@ -36,6 +69,23 @@ module.exports = {
           radial-gradient(circle at 25px 25px, rgba(249, 115, 22, 0.03) 2%, transparent 2%), 
           radial-gradient(circle at 75px 75px, rgba(249, 115, 22, 0.02) 1%, transparent 1%),
           linear-gradient(135deg, rgba(249, 115, 22, 0.01) 0%, rgba(251, 146, 60, 0.01) 50%, transparent 100%)
+        `,
+        'japanese-pattern': `
+          radial-gradient(circle at 20% 20%, rgba(249, 115, 22, 0.08) 2px, transparent 2px),
+          radial-gradient(circle at 80% 80%, rgba(251, 146, 60, 0.06) 1px, transparent 1px),
+          radial-gradient(ellipse 40px 20px at 40% 60%, rgba(254, 215, 170, 0.1), transparent),
+          radial-gradient(ellipse 30px 15px at 70% 30%, rgba(255, 237, 213, 0.08), transparent),
+          radial-gradient(ellipse 25px 12px at 25% 80%, rgba(249, 115, 22, 0.05), transparent),
+          linear-gradient(135deg, rgba(255, 251, 235, 0.4) 0%, rgba(254, 243, 199, 0.3) 50%, rgba(255, 251, 235, 0.4) 100%)
+        `,
+        'hero-gradient': `
+          linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.9) 0%, 
+            rgba(255, 247, 237, 0.95) 25%,
+            rgba(254, 243, 199, 0.9) 50%,
+            rgba(255, 247, 237, 0.95) 75%,
+            rgba(255, 255, 255, 0.9) 100%
+          )
         `,
         'card-gradient': 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%)',
         'header-gradient': 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 247, 237, 0.95) 100%)',
@@ -57,6 +107,7 @@ module.exports = {
         'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
         'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
         'shimmer': 'shimmer 2s ease-in-out infinite',
+        'gradient-move': 'gradientMove 3s ease-in-out infinite',
         'stagger-1': 'fadeInUp 0.8s ease-out 0.1s both',
         'stagger-2': 'fadeInUp 0.8s ease-out 0.2s both',
         'stagger-3': 'fadeInUp 0.8s ease-out 0.3s both',
@@ -105,6 +156,16 @@ module.exports = {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        gradientMove: {
+          '0%, 100%': { 
+            backgroundPosition: '0% 50%',
+            backgroundSize: '200% 200%'
+          },
+          '50%': { 
+            backgroundPosition: '100% 50%',
+            backgroundSize: '200% 200%'
+          },
         },
       },
       fontSize: {

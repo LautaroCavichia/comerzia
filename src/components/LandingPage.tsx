@@ -16,6 +16,9 @@ export const LandingPage: React.FC = () => {
           className="absolute inset-0 w-full h-full" 
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 1920 1080"
+          style={{
+            animation: 'mandalaPulse 15s ease-in-out infinite'
+          }}
         >
           {/* Outer edge elements - higher opacity */}
           {Array.from({length: 32}).map((_, i) => {
@@ -163,18 +166,124 @@ export const LandingPage: React.FC = () => {
         </svg>
       </div>
 
-      {/* Japanese Zen Elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Sakura petals */}
-        <div className="absolute top-1/4 left-1/5 w-3 h-3 bg-orange-200 rounded-full opacity-40 animate-pulse" style={{animationDuration: '4s'}}></div>
-        <div className="absolute top-1/3 right-1/4 w-2 h-2 bg-orange-300 rounded-full opacity-30 animate-pulse" style={{animationDuration: '6s', animationDelay: '1s'}}></div>
-        <div className="absolute bottom-1/3 left-1/3 w-2.5 h-2.5 bg-orange-100 rounded-full opacity-50 animate-pulse" style={{animationDuration: '5s', animationDelay: '2s'}}></div>
-        <div className="absolute top-2/3 right-1/3 w-1.5 h-1.5 bg-orange-200 rounded-full opacity-35 animate-pulse" style={{animationDuration: '7s', animationDelay: '0.5s'}}></div>
+      {/* Floating Elements & Wave Effects */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-[1]">
+        {/* Floating particles with gentle movement */}
+        <div className="absolute top-1/4 left-1/5 w-3 h-3 bg-orange-200 rounded-full opacity-40" 
+             style={{
+               animation: 'float 8s ease-in-out infinite, fadeInOut 4s ease-in-out infinite'
+             }}></div>
+        <div className="absolute top-1/3 right-1/4 w-2 h-2 bg-orange-300 rounded-full opacity-30" 
+             style={{
+               animation: 'float 10s ease-in-out infinite reverse, fadeInOut 6s ease-in-out infinite',
+               animationDelay: '1s'
+             }}></div>
+        <div className="absolute bottom-1/3 left-1/3 w-2.5 h-2.5 bg-orange-100 rounded-full opacity-50" 
+             style={{
+               animation: 'float 12s ease-in-out infinite, fadeInOut 5s ease-in-out infinite',
+               animationDelay: '2s'
+             }}></div>
+        <div className="absolute top-2/3 right-1/3 w-1.5 h-1.5 bg-orange-200 rounded-full opacity-35" 
+             style={{
+               animation: 'float 9s ease-in-out infinite reverse, fadeInOut 7s ease-in-out infinite',
+               animationDelay: '0.5s'
+             }}></div>
         
-        {/* Bamboo-inspired lines */}
-        <div className="absolute top-1/6 left-1/12 w-0.5 h-24 bg-orange-200 opacity-20 rounded-full"></div>
-        <div className="absolute bottom-1/4 right-1/6 w-0.5 h-32 bg-orange-100 opacity-25 rounded-full"></div>
+        {/* More floating particles */}
+        <div className="absolute top-1/6 left-2/3 w-1 h-1 bg-orange-300 rounded-full opacity-25" 
+             style={{
+               animation: 'float 15s ease-in-out infinite, fadeInOut 8s ease-in-out infinite',
+               animationDelay: '3s'
+             }}></div>
+        <div className="absolute bottom-1/6 right-1/5 w-2 h-2 bg-orange-100 rounded-full opacity-30" 
+             style={{
+               animation: 'float 11s ease-in-out infinite reverse, fadeInOut 6s ease-in-out infinite',
+               animationDelay: '4s'
+             }}></div>
+        
+        {/* Additional bottom particles */}
+        <div className="absolute bottom-1/5 left-1/8 w-3 h-3 bg-orange-200 rounded-full opacity-40" 
+             style={{
+               animation: 'float 8s ease-in-out infinite, fadeInOut 4s ease-in-out infinite',
+               animationDelay: '1s'
+             }}></div>
+        <div className="absolute bottom-1/4 right-1/6 w-2 h-2 bg-orange-300 rounded-full opacity-30" 
+             style={{
+               animation: 'float 10s ease-in-out infinite reverse, fadeInOut 6s ease-in-out infinite',
+               animationDelay: '2s'
+             }}></div>
+        <div className="absolute bottom-1/8 left-1/2 w-2.5 h-2.5 bg-orange-100 rounded-full opacity-50" 
+             style={{
+               animation: 'float 12s ease-in-out infinite, fadeInOut 5s ease-in-out infinite',
+               animationDelay: '3s'
+             }}></div>
+        <div className="absolute bottom-1/6 right-2/5 w-1.5 h-1.5 bg-orange-200 rounded-full opacity-35" 
+             style={{
+               animation: 'float 9s ease-in-out infinite reverse, fadeInOut 7s ease-in-out infinite',
+               animationDelay: '0.5s'
+             }}></div>
+        <div className="absolute bottom-1/12 left-3/5 w-1 h-1 bg-orange-300 rounded-full opacity-25" 
+             style={{
+               animation: 'float 15s ease-in-out infinite, fadeInOut 8s ease-in-out infinite',
+               animationDelay: '4s'
+             }}></div>
+        <div className="absolute bottom-1/3 right-1/8 w-2 h-2 bg-orange-100 rounded-full opacity-30" 
+             style={{
+               animation: 'float 11s ease-in-out infinite reverse, fadeInOut 6s ease-in-out infinite',
+               animationDelay: '5s'
+             }}></div>
       </div>
+
+      {/* Custom CSS animations */}
+      <style>{`
+        @keyframes mandalaPulse {
+          0%, 100% { 
+            opacity: 0.8; 
+          }
+          33% { 
+            opacity: 0.4; 
+          }
+          66% { 
+            opacity: 0.6; 
+          }
+        }
+        
+        @keyframes float {
+          0%, 100% { 
+            transform: translateY(0px) translateX(0px); 
+          }
+          25% { 
+            transform: translateY(-10px) translateX(5px); 
+          }
+          50% { 
+            transform: translateY(-20px) translateX(-5px); 
+          }
+          75% { 
+            transform: translateY(-10px) translateX(10px); 
+          }
+        }
+        
+        @keyframes fadeInOut {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 0.6; }
+        }
+        
+        @keyframes wave {
+          0%, 100% { 
+            transform: scaleY(1) rotateZ(0deg); 
+          }
+          25% { 
+            transform: scaleY(1.1) rotateZ(1deg); 
+          }
+          50% { 
+            transform: scaleY(0.9) rotateZ(-1deg); 
+          }
+          75% { 
+            transform: scaleY(1.05) rotateZ(0.5deg); 
+          }
+        }
+        
+      `}</style>
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-xl border-b border-orange-100 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

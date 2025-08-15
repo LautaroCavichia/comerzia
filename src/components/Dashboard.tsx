@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { useDatabase } from '../context/DatabaseContext';
 import { Encargo } from '../types';
@@ -37,11 +37,7 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'6m' | '1y' | 'all'>('6m');
 
-  useEffect(() => {
-    loadEncargos();
-  }, []);
-
-  const loadEncargos = async () => {
+  const loadEncargos = useCallback(async () => {
     try {
       setLoading(true);
       const data = await db.getEncargos();
@@ -51,7 +47,11 @@ export const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [db]);
+
+  useEffect(() => {
+    loadEncargos();
+  }, [loadEncargos]);
 
   const metrics: DashboardMetrics = useMemo(() => {
     const now = new Date();

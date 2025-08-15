@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Encargo } from '../types';
 import { EncargosTable } from './EncargosTable';
 import { SearchBar } from './SearchBar';
@@ -16,15 +16,7 @@ export const EncargosView: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadEncargos();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [searchQuery, dateFilter, showDelivered, encargos]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const loadEncargos = async () => {
+  const loadEncargos = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -37,7 +29,15 @@ export const EncargosView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [db]);
+
+  useEffect(() => {
+    loadEncargos();
+  }, [loadEncargos]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [searchQuery, dateFilter, showDelivered, encargos]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const applyFilters = async () => {
     try {

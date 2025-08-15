@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -70,20 +70,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
   const watchedPersona = watch('persona');
   const watchedFecha = watch('fecha');
 
-  useEffect(() => {
-    loadCatalogs();
-  }, []);
-
-  useEffect(() => {
-    if (watchedPersona) {
-      const persona = personas.find(p => p.nombre === watchedPersona);
-      if (persona) {
-        setValue('telefono', persona.telefono);
-      }
-    }
-  }, [watchedPersona, personas, setValue]);
-
-  const loadCatalogs = async () => {
+  const loadCatalogs = useCallback(async () => {
     try {
       const [personasData, productosData, laboratoriosData, almacenesData] = await Promise.all([
         db.getPersonas(),
@@ -99,7 +86,20 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
     } catch (error) {
       console.error('Error loading catalogs:', error);
     }
-  };
+  }, [db]);
+
+  useEffect(() => {
+    loadCatalogs();
+  }, [loadCatalogs]);
+
+  useEffect(() => {
+    if (watchedPersona) {
+      const persona = personas.find(p => p.nombre === watchedPersona);
+      if (persona) {
+        setValue('telefono', persona.telefono);
+      }
+    }
+  }, [watchedPersona, personas, setValue]);
 
   const normalizePhoneNumber = (phone: string): string => {
     try {

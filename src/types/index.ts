@@ -21,6 +21,9 @@ export interface Persona {
   id: string;
   nombre: string;
   telefono: string;
+  email?: string;
+  phone_notifications: boolean;
+  email_notifications: boolean;
   selling_point: string;
   created_at: Date;
   updated_at: Date;

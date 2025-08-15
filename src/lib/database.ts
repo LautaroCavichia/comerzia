@@ -107,7 +107,9 @@ export class DatabaseService {
     return result.map(row => ({
       ...row,
       created_at: new Date(row.created_at),
-      updated_at: new Date(row.updated_at)
+      updated_at: new Date(row.updated_at),
+      phone_notifications: row.phone_notifications || false,
+      email_notifications: row.email_notifications || false
     })) as Persona[];
   }
 
@@ -121,8 +123,58 @@ export class DatabaseService {
     return {
       ...row,
       created_at: new Date(row.created_at),
-      updated_at: new Date(row.updated_at)
+      updated_at: new Date(row.updated_at),
+      phone_notifications: row.phone_notifications || false,
+      email_notifications: row.email_notifications || false
     } as Persona;
+  }
+
+  async createPersonaWithNotifications(data: {
+    nombre: string;
+    telefono: string;
+    email?: string;
+    phone_notifications: boolean;
+    email_notifications: boolean;
+  }): Promise<Persona> {
+    const result = await sql`
+      INSERT INTO personas (
+        nombre, telefono, email, phone_notifications, email_notifications, selling_point
+      ) VALUES (
+        ${data.nombre}, ${data.telefono}, ${data.email || null}, 
+        ${data.phone_notifications}, ${data.email_notifications}, ${this.sellingPoint}
+      ) 
+      RETURNING *
+    `;
+    const row = result[0];
+    return {
+      ...row,
+      created_at: new Date(row.created_at),
+      updated_at: new Date(row.updated_at),
+      phone_notifications: row.phone_notifications || false,
+      email_notifications: row.email_notifications || false
+    } as Persona;
+  }
+
+  async updatePersonaNotifications(id: string, phoneNotifications: boolean, emailNotifications: boolean): Promise<void> {
+    await sql`
+      UPDATE personas 
+      SET phone_notifications = ${phoneNotifications}, 
+          email_notifications = ${emailNotifications},
+          updated_at = NOW()
+      WHERE id = ${id} AND selling_point = ${this.sellingPoint}
+    `;
+  }
+
+  async deletePersona(id: string): Promise<void> {
+    await sql`DELETE FROM personas WHERE id = ${id} AND selling_point = ${this.sellingPoint}`;
+  }
+
+  async updatePersonaEmail(id: string, email: string): Promise<void> {
+    await sql`
+      UPDATE personas 
+      SET email = ${email || null}, updated_at = NOW()
+      WHERE id = ${id} AND selling_point = ${this.sellingPoint}
+    `;
   }
 
   // Productos

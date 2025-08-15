@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Encargo } from '../types';
+import { Encargo, Persona } from '../types';
 import { EditableCell } from './EditableCell';
 import { ToggleCell } from './ToggleCell';
 import { useDatabase } from '../context/DatabaseContext';
+import { NotificationModal } from './NotificationModal';
 
 interface EncargosTableProps {
   encargos: Encargo[];
@@ -17,6 +18,10 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
 }) => {
   const { db } = useDatabase();
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
+  const [notificationModal, setNotificationModal] = useState<{
+    order: Encargo;
+    client: Persona;
+  } | null>(null);
 
   const handleCellEdit = async (id: string, field: string, value: any) => {
     try {
@@ -26,6 +31,44 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
     } catch (error) {
       console.error('Error updating encargo:', error);
       alert('Error al actualizar el encargo');
+    }
+  };
+
+  const handleRecibidoChange = async (encargo: Encargo, value: boolean) => {
+    if (value) {
+      try {
+        const personas = await db.getPersonas();
+        const client = personas.find(p => 
+          p.telefono === encargo.telefono || p.nombre === encargo.persona
+        );
+        
+        // Only show modal if client exists and has at least one notification preference enabled
+        if (client && (client.phone_notifications || client.email_notifications)) {
+          setNotificationModal({ order: encargo, client });
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking client notifications:', error);
+      }
+    }
+    
+    // If no modal shown, just update the field directly
+    handleCellEdit(encargo.id, 'recibido', value);
+  };
+
+  const handleSendNotification = async (shouldSend: boolean) => {
+    if (notificationModal) {
+      if (shouldSend) {
+        console.log('Sending notification to:', notificationModal.client.nombre);
+        // Update both recibido and avisado when notification is sent
+        await handleCellEdit(notificationModal.order.id, 'recibido', true);
+        await handleCellEdit(notificationModal.order.id, 'avisado', true);
+      } else {
+        // Only update recibido if not sending notification
+        await handleCellEdit(notificationModal.order.id, 'recibido', true);
+      }
+      
+      setNotificationModal(null);
     }
   };
 
@@ -64,10 +107,11 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
   }
 
   return (
-    <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-white/20">
-          <thead className="glass-badge sticky top-0 backdrop-blur-md">
+    <>
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-white/20">
+            <thead className="glass-badge sticky top-0 backdrop-blur-md">
             <tr>
               <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
                 Fecha
@@ -171,7 +215,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                 <td className="px-3 py-4 whitespace-nowrap text-center">
                   <ToggleCell
                     value={encargo.recibido}
-                    onChange={(value) => handleCellEdit(encargo.id, 'recibido', value)}
+                    onChange={(value) => handleRecibidoChange(encargo, value)}
                   />
                 </td>
                 
@@ -251,9 +295,20 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                 </td>
               </tr>
             ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+      
+      {notificationModal && (
+        <NotificationModal
+          order={notificationModal.order}
+          client={notificationModal.client}
+          isVisible={true}
+          onClose={() => setNotificationModal(null)}
+          onSendNotification={handleSendNotification}
+        />
+      )}
+    </>
   );
 };

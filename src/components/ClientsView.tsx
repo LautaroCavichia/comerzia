@@ -113,58 +113,60 @@ export const ClientsView: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Clientes</h2>
-          <p className="text-gray-600">Gestiona los perfiles de tus clientes</p>
+      <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-light text-stone-800">Clientes</h2>
+            <p className="text-stone-600 font-light">Gestiona los perfiles de tus clientes</p>
+          </div>
+          <button
+            onClick={() => setShowAddClient(true)}
+            className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-200 transition-all duration-200 transform hover:scale-105 shadow-sm space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Agregar Cliente</span>
+          </button>
         </div>
-        <button
-          onClick={() => setShowAddClient(true)}
-          className="glass-button"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Agregar Cliente
-        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Clients List */}
         <div className="lg:col-span-1">
-          <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Lista de Clientes</h3>
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+            <h3 className="text-lg font-light text-stone-800 mb-4">Lista de Clientes</h3>
             
             {clients.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No hay clientes registrados</p>
+              <p className="text-stone-500 text-center py-8 font-light">No hay clientes registrados</p>
             ) : (
               <div className="space-y-3">
                 {clients.map((client) => (
                   <div
                     key={client.id}
                     onClick={() => handleClientClick(client)}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 hover:shadow-sm ${
                       selectedClient?.id === client.id
-                        ? 'border-primary-300 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'border-orange-300 bg-orange-50'
+                        : 'border-stone-200 hover:border-orange-200 hover:bg-stone-50'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{client.nombre}</h4>
-                        <p className="text-sm text-gray-600">{client.telefono}</p>
+                        <h4 className="font-light text-stone-800">{client.nombre}</h4>
+                        <p className="text-sm text-stone-600 font-light">{client.telefono}</p>
                         {client.email && (
-                          <p className="text-sm text-gray-600">{client.email}</p>
+                          <p className="text-sm text-stone-600 font-light">{client.email}</p>
                         )}
                         <div className="flex items-center space-x-2 mt-2">
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                          <span className="text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded-full font-light">
                             {client.ordersHistory.length} pedidos
                           </span>
                           {client.phone_notifications && (
@@ -192,12 +194,12 @@ export const ClientsView: React.FC = () => {
               onUpdateNotifications={handleUpdateNotifications}
             />
           ) : (
-            <div className="glass-card p-12 text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-12 shadow-sm border border-stone-200 text-center">
+              <svg className="mx-auto h-12 w-12 text-stone-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona un Cliente</h3>
-              <p className="text-gray-600">Elige un cliente de la lista para ver sus detalles e historial</p>
+              <h3 className="text-lg font-light text-stone-800 mb-2">Selecciona un Cliente</h3>
+              <p className="text-stone-600 font-light">Elige un cliente de la lista para ver sus detalles e historial</p>
             </div>
           )}
         </div>

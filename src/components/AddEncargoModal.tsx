@@ -19,6 +19,9 @@ const encargoSchema = z.object({
   entregado: z.boolean(),
   persona: z.string().min(1, 'La persona es requerida'),
   telefono: z.string().min(1, 'El teléfono es requerido'),
+  email: z.string().optional(),
+  phone_notifications: z.boolean(),
+  email_notifications: z.boolean(),
   avisado: z.boolean(),
   pagado: z.number().min(0, 'El precio debe ser positivo'),
   observaciones: z.string().optional()
@@ -64,7 +67,10 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
       recibido: false,
       entregado: false,
       avisado: false,
-      pagado: 0
+      pagado: 0,
+      email: '',
+      phone_notifications: false,
+      email_notifications: false
     }
   });
 
@@ -98,6 +104,9 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
       const persona = personas.find(p => p.nombre === watchedPersona);
       if (persona) {
         setValue('telefono', persona.telefono);
+        setValue('email', persona.email || '');
+        setValue('phone_notifications', persona.phone_notifications || false);
+        setValue('email_notifications', persona.email_notifications || false);
       }
     }
   }, [watchedPersona, personas, setValue]);
@@ -170,13 +179,34 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
       const existingPersona = personas.find(p => p.nombre === sanitizedData.persona);
       if (!existingPersona) {
         try {
-          await db.createPersona(sanitizedData.persona, normalizedPhone);
+          await db.createPersonaWithNotifications({
+            nombre: sanitizedData.persona,
+            telefono: normalizedPhone,
+            email: sanitizedData.email || undefined,
+            phone_notifications: sanitizedData.phone_notifications,
+            email_notifications: sanitizedData.email_notifications && !!sanitizedData.email
+          });
         } catch (error) {
           if (error instanceof Error && error.message.includes('already exists')) {
             // Person exists with this phone, continue
           } else {
             throw error;
           }
+        }
+      } else if (sanitizedData.email || sanitizedData.phone_notifications || sanitizedData.email_notifications) {
+        // Update existing persona with email and notification preferences if provided
+        try {
+          if (sanitizedData.email && sanitizedData.email !== existingPersona.email) {
+            await db.updatePersonaEmail(existingPersona.id, sanitizedData.email);
+          }
+          await db.updatePersonaNotifications(
+            existingPersona.id,
+            sanitizedData.phone_notifications,
+            sanitizedData.email_notifications && !!sanitizedData.email
+          );
+        } catch (error) {
+          console.warn('Error updating persona preferences:', error);
+          // Continue with encargo creation even if persona update fails
         }
       }
 
@@ -229,12 +259,25 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
         const telefono = prompt('Ingrese el teléfono:');
         if (!telefono) return;
         
+        const email = prompt('Ingrese el email (opcional):');
+        const phoneNotifications = window.confirm('¿Activar notificaciones por teléfono?');
+        const emailNotifications = !!email && window.confirm('¿Activar notificaciones por email?');
+        
         const normalizedPhone = normalizePhoneNumber(telefono);
-        await db.createPersona(name, normalizedPhone);
+        await db.createPersonaWithNotifications({
+          nombre: name,
+          telefono: normalizedPhone,
+          email: email || undefined,
+          phone_notifications: phoneNotifications,
+          email_notifications: emailNotifications
+        });
         const personas = await db.getPersonas();
         setPersonas(personas);
         setValue('persona', name);
         setValue('telefono', normalizedPhone);
+        setValue('email', email || '');
+        setValue('phone_notifications', phoneNotifications);
+        setValue('email_notifications', emailNotifications);
       } else if (type === 'almacen') {
         await db.createAlmacen(name);
         const almacenes = await db.getAlmacenes();
@@ -256,8 +299,8 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
         <div className="flex-shrink-0 px-6 sm:px-8 py-6 border-b border-gray-200/50 bg-white/50">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-display font-semibold text-gray-900 tracking-tight">Nuevo Encargo</h2>
-              <p className="text-sm text-gray-500 mt-1">Complete la información del encargo</p>
+              <h2 className="text-2xl font-light text-stone-800">Nuevo Encargo</h2>
+              <p className="text-sm text-stone-600 font-light mt-1">Complete la información del encargo</p>
             </div>
             <button
               onClick={onClose}
@@ -276,15 +319,15 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
           <form onSubmit={handleSubmit(onSubmit)} className="px-6 sm:px-8 py-8">
             {/* Basic Information Section */}
             <div className="mb-10">
-              <h3 className="text-lg font-display font-medium text-gray-900 mb-6">Información Básica</h3>
+              <h3 className="text-lg font-light text-stone-800 mb-6">Información Básica</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Fecha *</label>
+                  <label className="block text-sm font-light text-stone-700">Fecha *</label>
                   <DatePicker
                     selected={watchedFecha}
                     onChange={(date: Date | null) => date && setValue('fecha', date)}
                     dateFormat="dd/MM/yyyy"
-                    className="w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                    className="w-full px-4 py-3.5 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
                     placeholderText="Seleccionar fecha"
                   />
                   {errors.fecha && (
@@ -293,12 +336,12 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Producto *</label>
+                  <label className="block text-sm font-light text-stone-700">Producto *</label>
                   <div className="relative">
                     <input
                       {...register('producto')}
                       list="productos"
-                      className="w-full px-4 py-3.5 pr-20 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
                       placeholder="Escribir o seleccionar producto"
                     />
                     <datalist id="productos">
@@ -309,7 +352,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleNewItem('producto')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50/80 rounded-lg transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-light text-orange-600 hover:text-orange-700 hover:bg-orange-50/80 rounded-lg transition-colors"
                     >
                       + Nuevo
                     </button>
@@ -320,12 +363,12 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Laboratorio *</label>
+                  <label className="block text-sm font-light text-stone-700">Laboratorio *</label>
                   <div className="relative">
                     <input
                       {...register('laboratorio')}
                       list="laboratorios"
-                      className="w-full px-4 py-3.5 pr-20 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
                       placeholder="Escribir o seleccionar laboratorio"
                     />
                     <datalist id="laboratorios">
@@ -336,7 +379,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleNewItem('laboratorio')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50/80 rounded-lg transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-light text-orange-600 hover:text-orange-700 hover:bg-orange-50/80 rounded-lg transition-colors"
                     >
                       + Nuevo
                     </button>
@@ -347,12 +390,12 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Almacén *</label>
+                  <label className="block text-sm font-light text-stone-700">Almacén *</label>
                   <div className="relative">
                     <input
                       {...register('almacen')}
                       list="almacenes"
-                      className="w-full px-4 py-3.5 pr-20 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
                       placeholder="Escribir o seleccionar almacén"
                     />
                     <datalist id="almacenes">
@@ -363,7 +406,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleNewItem('almacen')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50/80 rounded-lg transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-light text-orange-600 hover:text-orange-700 hover:bg-orange-50/80 rounded-lg transition-colors"
                     >
                       + Nuevo
                     </button>
@@ -377,15 +420,15 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
 
             {/* Contact Information Section */}
             <div className="mb-10">
-              <h3 className="text-lg font-display font-medium text-gray-900 mb-6">Información de Contacto</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <h3 className="text-lg font-light text-stone-800 mb-6">Información de Contacto</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Persona *</label>
+                  <label className="block text-sm font-light text-stone-700">Persona *</label>
                   <div className="relative">
                     <input
                       {...register('persona')}
                       list="personas"
-                      className="w-full px-4 py-3.5 pr-20 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
                       placeholder="Escribir o seleccionar persona"
                     />
                     <datalist id="personas">
@@ -396,7 +439,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleNewItem('persona')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50/80 rounded-lg transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-light text-orange-600 hover:text-orange-700 hover:bg-orange-50/80 rounded-lg transition-colors"
                     >
                       + Nueva
                     </button>
@@ -407,73 +450,118 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Teléfono *</label>
+                  <label className="block text-sm font-light text-stone-700">Teléfono *</label>
                   <input
                     {...register('telefono')}
                     type="tel"
                     placeholder="+34 612 345 678"
-                    className="w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                    className="w-full px-4 py-3.5 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
                   />
                   {errors.telefono && (
                     <p className="text-xs text-red-500">{errors.telefono.message}</p>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-light text-stone-700">Email</label>
+                  <input
+                    {...register('email')}
+                    type="email"
+                    placeholder="ejemplo@email.com"
+                    className="w-full px-4 py-3.5 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
+                  />
+                  {errors.email && (
+                    <p className="text-xs text-red-500">{errors.email.message}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Notification Preferences */}
+              <div className="mt-6">
+                <h4 className="text-md font-light text-stone-800 mb-4">Preferencias de Notificación</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label className="group cursor-pointer">
+                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
+                      <div className="flex items-center">
+                        <input
+                          {...register('phone_notifications')}
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
+                        />
+                        <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Notificaciones por teléfono</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="group cursor-pointer">
+                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
+                      <div className="flex items-center">
+                        <input
+                          {...register('email_notifications')}
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
+                        />
+                        <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Notificaciones por email</span>
+                      </div>
+                    </div>
+                  </label>
                 </div>
               </div>
             </div>
 
             {/* Status & Payment Section */}
             <div className="mb-10">
-              <h3 className="text-lg font-display font-medium text-gray-900 mb-6">Estado y Pago</h3>
+              <h3 className="text-lg font-light text-stone-800 mb-6">Estado y Pago</h3>
               <div className="space-y-8">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <label className="group cursor-pointer">
-                    <div className="p-4 bg-gray-50/50 border border-gray-200/80 rounded-xl hover:bg-gray-100/50 transition-colors">
+                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
                       <div className="flex items-center">
                         <input
                           {...register('pedido')}
                           type="checkbox"
-                          className="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500/20 transition-colors"
+                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
                         />
-                        <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Pedido</span>
+                        <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Pedido</span>
                       </div>
                     </div>
                   </label>
 
                   <label className="group cursor-pointer">
-                    <div className="p-4 bg-gray-50/50 border border-gray-200/80 rounded-xl hover:bg-gray-100/50 transition-colors">
+                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
                       <div className="flex items-center">
                         <input
                           {...register('recibido')}
                           type="checkbox"
-                          className="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500/20 transition-colors"
+                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
                         />
-                        <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Recibido</span>
+                        <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Recibido</span>
                       </div>
                     </div>
                   </label>
 
                   <label className="group cursor-pointer">
-                    <div className="p-4 bg-gray-50/50 border border-gray-200/80 rounded-xl hover:bg-gray-100/50 transition-colors">
+                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
                       <div className="flex items-center">
                         <input
                           {...register('entregado')}
                           type="checkbox"
-                          className="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500/20 transition-colors"
+                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
                         />
-                        <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Entregado</span>
+                        <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Entregado</span>
                       </div>
                     </div>
                   </label>
 
                   <label className="group cursor-pointer">
-                    <div className="p-4 bg-gray-50/50 border border-gray-200/80 rounded-xl hover:bg-gray-100/50 transition-colors">
+                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
                       <div className="flex items-center">
                         <input
                           {...register('avisado')}
                           type="checkbox"
-                          className="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500/20 transition-colors"
+                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
                         />
-                        <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Avisado</span>
+                        <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Avisado</span>
                       </div>
                     </div>
                   </label>
@@ -481,7 +569,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Precio Pagado (€)</label>
+                    <label className="block text-sm font-light text-stone-700">Precio Pagado (€)</label>
                     <div className="relative">
                       <input
                         {...register('pagado', { valueAsNumber: true })}
@@ -489,10 +577,10 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                         step="0.01"
                         min="0"
                         placeholder="0.00"
-                        className="w-full pl-10 pr-4 py-3.5 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm"
+                        className="w-full pl-10 pr-4 py-3.5 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
                       />
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-400 text-sm">€</span>
+                        <span className="text-stone-400 text-sm font-light">€</span>
                       </div>
                     </div>
                     {errors.pagado && (
@@ -501,12 +589,12 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Observaciones</label>
+                    <label className="block text-sm font-light text-stone-700">Observaciones</label>
                     <textarea
                       {...register('observaciones')}
                       rows={4}
                       placeholder="Información adicional sobre el encargo..."
-                      className="w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all text-sm resize-none"
+                      className="w-full px-4 py-3.5 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm resize-none"
                     />
                   </div>
                 </div>
@@ -521,7 +609,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors rounded-xl hover:bg-gray-100/50"
+              className="px-6 py-3 text-stone-600 hover:text-stone-800 font-light transition-colors rounded-xl hover:bg-stone-100/50"
             >
               Cancelar
             </button>
@@ -529,7 +617,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
               type="submit"
               disabled={loading}
               onClick={handleSubmit(onSubmit)}
-              className="px-8 py-3 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all shadow-sm hover:shadow-md disabled:hover:shadow-sm"
+              className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-light rounded-xl transition-all shadow-sm hover:shadow-md disabled:hover:shadow-sm"
             >
               {loading ? (
                 <div className="flex items-center justify-center">

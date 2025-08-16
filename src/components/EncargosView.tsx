@@ -143,8 +143,8 @@ export const EncargosView: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <span className="ml-2 text-gray-600">Cargando encargos...</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        <span className="ml-2 text-stone-600 font-light">Cargando encargos...</span>
       </div>
     );
   }
@@ -160,8 +160,8 @@ export const EncargosView: React.FC = () => {
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
+              <h3 className="text-sm font-light text-red-800">Error</h3>
+              <p className="text-sm text-red-700 mt-1 font-light">{error}</p>
             </div>
           </div>
         </div>
@@ -192,10 +192,10 @@ export const EncargosView: React.FC = () => {
         <div className="flex gap-3">
           <button
             onClick={() => setShowDelivered(!showDelivered)}
-            className={`inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all focus:outline-none focus:ring-2 ${
+            className={`inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light transition-all focus:outline-none focus:ring-2 ${
               showDelivered
-                ? 'glass-card bg-green-50/50 text-green-700 border border-green-200/30 hover:bg-green-100/50 focus:ring-green-500/20'
-                : 'glass-card text-gray-700 border border-white/30 hover:bg-white/40 focus:ring-primary-500/20'
+                ? 'bg-white/90 backdrop-blur-xl bg-green-50/50 text-green-700 border border-green-200/30 hover:bg-green-100/50 focus:ring-green-500/20 shadow-sm rounded-xl'
+                : 'bg-white/90 backdrop-blur-xl text-stone-700 border border-stone-200 hover:bg-white/40 focus:ring-orange-500/20 shadow-sm rounded-xl'
             }`}
           >
             <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,7 +210,7 @@ export const EncargosView: React.FC = () => {
 
           <button
             onClick={handleExportCSV}
-            className="btn-secondary inline-flex items-center focus:outline-none"
+            className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-stone-700 bg-white/90 backdrop-blur-xl border border-stone-200 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-stone-200 transition-all duration-200 shadow-sm"
           >
             <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -220,7 +220,7 @@ export const EncargosView: React.FC = () => {
 
           <button
             onClick={handleAddEncargo}
-            className="btn-primary inline-flex items-center focus:outline-none"
+            className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-200 transition-all duration-200 transform hover:scale-105 shadow-sm"
           >
             <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

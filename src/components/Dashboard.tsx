@@ -159,8 +159,8 @@ export const Dashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
-        <span className="ml-2 text-gray-600">Cargando métricas...</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        <span className="ml-2 text-stone-600 font-light">Cargando métricas...</span>
       </div>
     );
   }
@@ -168,86 +168,88 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-          <p className="text-gray-600">Análisis y métricas de tus encargos</p>
-        </div>
-        
-        <div className="mt-4 sm:mt-0">
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value as '6m' | '1y' | 'all')}
-            className="select-field"
-          >
-            <option value="6m">Últimos 6 meses</option>
-            <option value="1y">Último año</option>
-            <option value="all">Todo el tiempo</option>
-          </select>
+      <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-light text-stone-800">Dashboard</h2>
+            <p className="text-stone-600 font-light">Análisis y métricas de tus encargos</p>
+          </div>
+          
+          <div className="mt-4 sm:mt-0">
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as '6m' | '1y' | 'all')}
+              className="select-field"
+            >
+              <option value="6m">Últimos 6 meses</option>
+              <option value="1y">Último año</option>
+              <option value="all">Todo el tiempo</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card p-6">
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200 hover:shadow-md transition-shadow duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Encargos</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics.totalOrders}</p>
+              <p className="text-sm font-light text-stone-600">Total Encargos</p>
+              <p className="text-3xl font-light text-stone-800">{metrics.totalOrders}</p>
             </div>
-            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="card p-6">
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200 hover:shadow-md transition-shadow duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Este Mes</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics.totalOrdersThisMonth}</p>
+              <p className="text-sm font-light text-stone-600">Este Mes</p>
+              <p className="text-3xl font-light text-stone-800">{metrics.totalOrdersThisMonth}</p>
               {metrics.ordersGrowth !== 0 && (
-                <p className={`text-sm ${metrics.ordersGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`text-sm font-light ${metrics.ordersGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {metrics.ordersGrowth > 0 ? '+' : ''}{metrics.ordersGrowth.toFixed(1)}% vs mes anterior
                 </p>
               )}
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="card p-6">
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200 hover:shadow-md transition-shadow duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Pendientes</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics.pendingOrders}</p>
+              <p className="text-sm font-light text-stone-600">Pendientes</p>
+              <p className="text-3xl font-light text-stone-800">{metrics.pendingOrders}</p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="card p-6">
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200 hover:shadow-md transition-shadow duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Entregados</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics.completedOrders}</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm font-light text-stone-600">Entregados</p>
+              <p className="text-3xl font-light text-stone-800">{metrics.completedOrders}</p>
+              <p className="text-sm text-stone-500 font-light">
                 {((metrics.completedOrders / metrics.totalOrders) * 100).toFixed(1)}% del total
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
@@ -257,8 +259,8 @@ export const Dashboard: React.FC = () => {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Orders Over Time */}
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Encargos en el Tiempo</h3>
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+          <h3 className="text-lg font-light text-stone-800 mb-4">Encargos en el Tiempo</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={ordersOverTime}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
@@ -279,8 +281,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Top Products */}
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Productos Más Solicitados</h3>
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+          <h3 className="text-lg font-light text-stone-800 mb-4">Productos Más Solicitados</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={topProducts.slice(0, 6)} layout="horizontal">
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
@@ -303,8 +305,8 @@ export const Dashboard: React.FC = () => {
       {/* Detailed Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Product Distribution */}
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Distribución de Productos</h3>
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+          <h3 className="text-lg font-light text-stone-800 mb-4">Distribución de Productos</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -327,23 +329,23 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Top Customers */}
-        <div className="lg:col-span-2 card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Mejores Clientes</h3>
+        <div className="lg:col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+          <h3 className="text-lg font-light text-stone-800 mb-4">Mejores Clientes</h3>
           <div className="space-y-4">
             {topCustomers.slice(0, 6).map((customer, index) => (
-              <div key={customer.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={customer.name} className="flex items-center justify-between p-4 bg-stone-50/50 rounded-xl hover:bg-stone-50 transition-colors duration-200">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                    <span className="text-primary-600 font-medium text-sm">{index + 1}</span>
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                    <span className="text-orange-600 font-light text-sm">{index + 1}</span>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{customer.name}</p>
-                    <p className="text-sm text-gray-600">{customer.phone}</p>
+                    <p className="font-light text-stone-800">{customer.name}</p>
+                    <p className="text-sm text-stone-600 font-light">{customer.phone}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-gray-900">{customer.orderCount} encargos</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-light text-stone-800">{customer.orderCount} encargos</p>
+                  <p className="text-sm text-stone-600 font-light">
                     Último: {customer.lastOrder.toLocaleDateString('es-ES')}
                   </p>
                 </div>

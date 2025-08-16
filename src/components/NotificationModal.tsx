@@ -40,8 +40,8 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   const hasNotificationPreferences = client.email_notifications; // Phone notifications disabled
 
   return (
-    <div className="modal-backdrop">
-      <div className="glass-modal">
+    <div className="modal-backdrop z-[9999]" style={{ isolation: 'isolate' }}>
+      <div className="glass-modal z-[10000]">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">

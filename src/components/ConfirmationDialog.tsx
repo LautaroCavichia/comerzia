@@ -60,8 +60,8 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="glass-modal max-w-md w-full">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]" style={{ isolation: 'isolate' }}>
+      <div className="glass-modal max-w-md w-full z-[10000]">
         <div className="flex items-start mb-4">
           <div className="flex-shrink-0">
             {getIcon()}

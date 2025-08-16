@@ -202,11 +202,9 @@
   .glass-modal {
     @apply bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl max-w-md w-full mx-4;
     animation: modalSlideIn 0.3s ease-out;
-    z-index: 9999;
   }
 
   .modal-backdrop {
     @apply fixed inset-0 bg-black/50 flex items-center justify-center p-4;
-    z-index: 9998;
   }
 }

@@ -6,6 +6,8 @@ import { AddEncargoModal } from './AddEncargoModal';
 import { Pagination } from './Pagination';
 import { QuickFilters, QuickFilter } from './QuickFilters';
 import { useDatabase } from '../context/DatabaseContext';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 export const EncargosView: React.FC = () => {
   const { db } = useDatabase();
@@ -26,6 +28,7 @@ export const EncargosView: React.FC = () => {
   const [activeQuickFilter, setActiveQuickFilter] = useState<string>('all');
   const [quickFilters, setQuickFilters] = useState<QuickFilter[]>([]);
   const [counts, setCounts] = useState<any>({});
+  const [showDeliveredToggle, setShowDeliveredToggle] = useState<boolean>(false);
 
   // Debounce search query to prevent searching on every keystroke
   useEffect(() => {
@@ -72,13 +75,6 @@ export const EncargosView: React.FC = () => {
           icon: <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
         },
         {
-          id: 'received',
-          label: 'Recibidos',
-          count: countsData.received,
-          active: activeQuickFilter === 'received',
-          icon: <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-        },
-        {
           id: 'delivered',
           label: 'Entregados',
           count: countsData.delivered,
@@ -97,7 +93,7 @@ export const EncargosView: React.FC = () => {
           label: 'Sin pagar',
           count: countsData.unpaid,
           active: activeQuickFilter === 'unpaid',
-          icon: <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" /></svg>
+          icon: <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M13.477 14.89A6 6 0 715.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" /></svg>
         }
       ];
       
@@ -115,13 +111,16 @@ export const EncargosView: React.FC = () => {
       if (debouncedSearchQuery.trim()) {
         // Use search when there's a query
         const searchResults = await db.searchEncargos(debouncedSearchQuery);
-        setEncargos(applyQuickFilter(searchResults));
-        setTotalCount(searchResults.length);
-        setTotalPages(Math.ceil(searchResults.length / itemsPerPage));
+        const filteredResults = applyQuickFilter(searchResults);
+        setEncargos(filteredResults);
+        setTotalCount(filteredResults.length);
+        setTotalPages(Math.ceil(filteredResults.length / itemsPerPage));
       } else {
         // Use paginated query for better performance
         const result = await db.getEncargosPaginated(currentPage, itemsPerPage);
-        setEncargos(applyQuickFilter(result.encargos));
+        const filteredResults = applyQuickFilter(result.encargos);
+        setEncargos(filteredResults);
+        
         setTotalCount(result.totalCount);
         setTotalPages(result.totalPages);
       }
@@ -131,7 +130,7 @@ export const EncargosView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [db, currentPage, itemsPerPage, debouncedSearchQuery, activeQuickFilter]);
+  }, [db, currentPage, itemsPerPage, debouncedSearchQuery, activeQuickFilter, showDeliveredToggle]);
 
   const applyQuickFilter = (data: Encargo[]): Encargo[] => {
     const today = new Date();
@@ -139,30 +138,44 @@ export const EncargosView: React.FC = () => {
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay());
 
+    // First apply the selected filter
+    let filteredData: Encargo[];
     switch (activeQuickFilter) {
       case 'today':
-        return data.filter(e => {
+        filteredData = data.filter(e => {
           const orderDate = new Date(e.fecha);
           return orderDate >= startOfDay;
         });
+        break;
       case 'thisWeek':
-        return data.filter(e => {
+        filteredData = data.filter(e => {
           const orderDate = new Date(e.fecha);
           return orderDate >= startOfWeek;
         });
+        break;
       case 'pending':
-        return data.filter(e => !e.entregado);
-      case 'received':
-        return data.filter(e => e.recibido);
+        filteredData = data.filter(e => !e.entregado);
+        break;
       case 'delivered':
-        return data.filter(e => e.entregado);
+        filteredData = data.filter(e => e.entregado);
+        break;
       case 'paid':
-        return data.filter(e => e.pagado > 0);
+        filteredData = data.filter(e => e.pagado > 0);
+        break;
       case 'unpaid':
-        return data.filter(e => e.pagado === 0);
+        filteredData = data.filter(e => e.pagado === 0);
+        break;
       default:
-        return data;
+        filteredData = data;
+        break;
     }
+
+    // Then hide delivered orders unless toggle is active
+    if (!showDeliveredToggle) {
+      filteredData = filteredData.filter(e => !e.entregado);
+    }
+
+    return filteredData;
   };
 
   useEffect(() => {
@@ -187,10 +200,20 @@ export const EncargosView: React.FC = () => {
     setActiveQuickFilter(filterId);
     setCurrentPage(1); // Reset to first page when filtering
     
+    // If selecting "delivered" filter, automatically turn on the toggle
+    if (filterId === 'delivered') {
+      setShowDeliveredToggle(true);
+    }
+    
     // Update filter states
     setQuickFilters(prev => 
       prev.map(f => ({ ...f, active: f.id === filterId }))
     );
+  };
+
+  const handleToggleDelivered = () => {
+    setShowDeliveredToggle(prev => !prev);
+    setCurrentPage(1); // Reset to first page when toggling
   };
 
   const handlePageChange = (page: number) => {
@@ -269,17 +292,91 @@ export const EncargosView: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-        <span className="ml-2 text-stone-600 font-light">Cargando encargos...</span>
-      </div>
+      <SkeletonTheme baseColor="#e7e5e4" highlightColor="#f5f5f4">
+        <div className="space-y-6 transition-all duration-500 ease-in-out opacity-100">
+          {/* Loading Spinner Header */}
+          <div className="flex items-center justify-center py-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mr-3"></div>
+            <span className="text-stone-600 font-light text-sm">Cargando encargos...</span>
+          </div>
+
+          {/* Quick Filters Skeleton */}
+          <div className="flex flex-wrap gap-2">
+            {[...Array(8)].map((_, i) => (
+              <Skeleton key={i} height={32} width={80} className="rounded-lg" />
+            ))}
+          </div>
+
+          {/* Search and Buttons Skeleton */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 flex-1">
+              <div className="flex-1 max-w-lg">
+                <Skeleton height={40} className="rounded-xl" />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Skeleton height={40} width={128} className="rounded-xl" />
+              <Skeleton height={40} width={144} className="rounded-xl" />
+            </div>
+          </div>
+
+          {/* Table Skeleton */}
+          <div className="glass-card overflow-hidden transform transition-all duration-500 ease-in-out">
+            {/* Table Header */}
+            <div className="bg-stone-50/50 border-b border-stone-200/50 px-6 py-4">
+              <div className="grid grid-cols-12 gap-4">
+                {[...Array(12)].map((_, i) => (
+                  <Skeleton key={i} height={16} />
+                ))}
+              </div>
+            </div>
+            
+            {/* Table Rows */}
+            {[...Array(8)].map((_, rowIndex) => (
+              <div key={rowIndex} className="border-b border-stone-100/50 px-6 py-4 transform transition-all duration-300 ease-in-out" style={{ transitionDelay: `${rowIndex * 50}ms` }}>
+                <div className="grid grid-cols-12 gap-4 items-center">
+                  {[...Array(12)].map((_, colIndex) => (
+                    <div key={colIndex} className="space-y-1">
+                      <Skeleton height={16} />
+                      {colIndex < 3 && <Skeleton height={12} width="75%" />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination Skeleton */}
+          <div className="flex items-center justify-between transform transition-all duration-500 ease-in-out">
+            <Skeleton height={32} width={160} />
+            <div className="flex gap-2">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} height={32} width={32} />
+              ))}
+            </div>
+            <Skeleton height={32} width={128} />
+          </div>
+        </div>
+      </SkeletonTheme>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6"
+         style={{ animation: 'fadeIn 0.7s ease-out forwards' }}>
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+      `}</style>
+
       {error && (
-        <div className="glass-card border border-red-200/30 p-4 bg-red-50/50">
+        <div className="glass-card border border-red-200/30 p-4 bg-red-50/50 transition-all duration-500 ease-in-out">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -300,6 +397,7 @@ export const EncargosView: React.FC = () => {
         onFilterChange={handleQuickFilterChange}
       />
 
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex flex-col sm:flex-row gap-4 flex-1">
           <div className="flex-1 max-w-lg">
@@ -313,8 +411,29 @@ export const EncargosView: React.FC = () => {
 
         <div className="flex gap-3">
           <button
+            onClick={handleToggleDelivered}
+            className={`inline-flex items-center px-3 py-2.5 text-sm font-light rounded-xl transition-all duration-200 border-2 transform hover:scale-105 ${
+              showDeliveredToggle
+                ? 'bg-orange-50 border-orange-400 text-orange-700 shadow-sm'
+                : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400'
+            }`}
+          >
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            <span>Ver entregados</span>
+            <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
+              showDeliveredToggle
+                ? 'bg-orange-100 text-orange-600'
+                : 'bg-gray-100 text-gray-500'
+            }`}>
+              {counts.delivered || 0}
+            </span>
+          </button>
+
+          <button
             onClick={handleExportCSV}
-            className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-stone-700 bg-white/90 backdrop-blur-xl border border-stone-200 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-stone-200 transition-all duration-200 shadow-sm"
+            className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-stone-700 bg-white/90 backdrop-blur-xl border border-stone-200 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-stone-200 transition-all duration-200 shadow-sm transform hover:scale-105"
           >
             <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

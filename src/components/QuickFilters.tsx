@@ -6,6 +6,7 @@ export interface QuickFilter {
   count?: number;
   active: boolean;
   icon?: React.ReactNode;
+  special?: boolean;
 }
 
 interface QuickFiltersProps {
@@ -28,9 +29,13 @@ export const QuickFilters: React.FC<QuickFiltersProps> = ({
           key={filter.id}
           onClick={() => onFilterChange(filter.id)}
           className={`inline-flex items-center px-3 py-1.5 text-xs font-light rounded-lg transition-all duration-200 border ${
-            filter.active
-              ? 'bg-orange-50 border-orange-200 text-orange-700 shadow-sm'
-              : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50 hover:border-stone-300'
+            filter.special
+              ? filter.active
+                ? 'bg-orange-50 border-orange-400 text-orange-700 shadow-sm border-2'
+                : 'bg-white border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 border-2'
+              : filter.active
+                ? 'bg-orange-50 border-orange-200 text-orange-700 shadow-sm'
+                : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50 hover:border-stone-300'
           }`}
         >
           {filter.icon && (
@@ -41,9 +46,13 @@ export const QuickFilters: React.FC<QuickFiltersProps> = ({
           <span>{filter.label}</span>
           {typeof filter.count === 'number' && (
             <span className={`ml-1.5 px-1.5 py-0.5 text-xs rounded-full ${
-              filter.active
-                ? 'bg-orange-100 text-orange-600'
-                : 'bg-stone-100 text-stone-500'
+              filter.special
+                ? filter.active
+                  ? 'bg-orange-100 text-orange-600'
+                  : 'bg-orange-50 text-orange-500'
+                : filter.active
+                  ? 'bg-orange-100 text-orange-600'
+                  : 'bg-stone-100 text-stone-500'
             }`}>
               {filter.count}
             </span>

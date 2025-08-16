@@ -123,7 +123,6 @@ export const LandingPage: React.FC = () => {
             />
             
             {/* Small stones scattered */}
-            <ellipse cx="800" cy="400" rx="30" ry="12" fill="#b0a599" opacity="0.6"/>
             <ellipse cx="400" cy="200" rx="25" ry="10" fill="#a8a092" opacity="0.5"/>
             <ellipse cx="1200" cy="700" rx="35" ry="15" fill="#b5aa9d" opacity="0.7"/>
             <ellipse cx="600" cy="900" rx="20" ry="8" fill="#a3988c" opacity="0.4"/>
@@ -437,8 +436,8 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 sm:mb-18 md:mb-20">
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-stone-800 mb-6 sm:mb-8 leading-tight">
-              ¿Cómo funciona 
-              <span className="text-orange-500 font-normal relative inline-block"> Comerzia
+              ¿Cómo funciona{' '} 
+              <span className="text-orange-500 font-normal relative inline-block">Comerzia
                 <div className="absolute -bottom-0.5 sm:-bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-orange-300 to-orange-500 rounded-full opacity-50"></div>
               </span>?
             </h2>

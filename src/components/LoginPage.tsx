@@ -288,26 +288,6 @@ export const LoginPage: React.FC = () => {
             </div>
           </form>
         </div>
-
-        <div className="text-center">
-          <div className="text-xs sm:text-sm text-stone-500 space-y-2 font-light">
-            <p>© 2025 Comerzia - Simplicidad en la gestión</p>
-            <div className="flex items-center justify-center space-x-6 mt-3">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full opacity-70"></div>
-                <span className="text-xs">Seguro</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full opacity-70"></div>
-                <span className="text-xs">Elegante</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full opacity-70"></div>
-                <span className="text-xs">Rápido</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

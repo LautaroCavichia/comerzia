@@ -260,7 +260,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
         if (!telefono) return;
         
         const email = prompt('Ingrese el email (opcional):');
-        const phoneNotifications = window.confirm('¿Activar notificaciones por teléfono?');
+        const phoneNotifications = false; // Phone notifications disabled (coming soon)
         const emailNotifications = !!email && window.confirm('¿Activar notificaciones por email?');
         
         const normalizedPhone = normalizePhoneNumber(telefono);
@@ -558,15 +558,17 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                   Preferencias de Notificación
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <label className="group cursor-pointer">
-                    <div className="p-4 bg-white/70 border border-blue-200 rounded-xl hover:bg-blue-50 transition-colors backdrop-blur-sm">
+                  <label className="group cursor-pointer opacity-50">
+                    <div className="p-4 bg-white/70 border border-blue-200 rounded-xl backdrop-blur-sm">
                       <div className="flex items-center">
                         <input
-                          {...register('phone_notifications')}
                           type="checkbox"
+                          checked={false}
+                          disabled
                           className="w-4 h-4 rounded border-blue-300 text-blue-500 focus:ring-blue-500/20 transition-colors"
                         />
-                        <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Notificaciones por teléfono</span>
+                        <span className="ml-3 text-sm font-light text-stone-700">Notificaciones por teléfono</span>
+                        <span className="ml-2 text-xs text-gray-500">(Próximamente)</span>
                       </div>
                     </div>
                   </label>

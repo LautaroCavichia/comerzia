@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Encargo, Persona } from '../types';
+import { emailService } from '../services/emailService';
 
 interface NotificationModalProps {
   order: Encargo;
@@ -23,16 +24,20 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   const handleSendNotification = async (shouldSend: boolean) => {
     setLoading(true);
     try {
+      if (shouldSend && client.email_notifications && client.email) {
+        await emailService.sendOrderArrivalNotification(order, client);
+      }
       await onSendNotification(shouldSend);
       onClose();
     } catch (error) {
       console.error('Error sending notification:', error);
+      alert('Error al enviar la notificación. Por favor, intenta de nuevo.');
     } finally {
       setLoading(false);
     }
   };
 
-  const hasNotificationPreferences = client.phone_notifications || client.email_notifications;
+  const hasNotificationPreferences = client.email_notifications; // Phone notifications disabled
 
   return (
     <div className="modal-backdrop">
@@ -78,11 +83,9 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
                 <strong>{client.telefono}</strong>
-                {client.phone_notifications && (
-                  <span className="ml-2 text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">
-                    Notificaciones activas
-                  </span>
-                )}
+                <span className="ml-2 text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                  Próximamente
+                </span>
               </p>
               {client.email && (
                 <p className="flex items-center">

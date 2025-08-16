@@ -43,6 +43,116 @@ export class DatabaseService {
     })) as Encargo[];
   }
 
+  async getEncargosPaginated(page: number = 1, limit: number = 25): Promise<{
+    encargos: Encargo[];
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+  }> {
+    const offset = (page - 1) * limit;
+    
+    // Get total count
+    const countResult = await sql`
+      SELECT COUNT(*) as total FROM encargos 
+      WHERE selling_point = ${this.sellingPoint}
+    `;
+    const totalCount = parseInt(countResult[0].total);
+    const totalPages = Math.ceil(totalCount / limit);
+    
+    // Get paginated results
+    const result = await sql`
+      SELECT * FROM encargos 
+      WHERE selling_point = ${this.sellingPoint}
+      ORDER BY fecha DESC, created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+    
+    const encargos = result.map(row => ({
+      ...row,
+      fecha: createDateFromString(row.fecha),
+      created_at: row.created_at ? new Date(row.created_at) : new Date(),
+      updated_at: row.updated_at ? new Date(row.updated_at) : new Date(),
+      pagado: typeof row.pagado === 'string' ? parseFloat(row.pagado) || 0 : (row.pagado || 0)
+    })) as Encargo[];
+    
+    return {
+      encargos,
+      totalCount,
+      totalPages,
+      currentPage: page
+    };
+  }
+
+  async getEncargosCounts(): Promise<{
+    total: number;
+    today: number;
+    thisWeek: number;
+    thisMonth: number;
+    pending: number;
+    received: number;
+    delivered: number;
+    paid: number;
+    unpaid: number;
+  }> {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    const results = await Promise.all([
+      // Total count
+      sql`SELECT COUNT(*) as count FROM encargos WHERE selling_point = ${this.sellingPoint}`,
+      
+      // Today's orders
+      sql`SELECT COUNT(*) as count FROM encargos 
+           WHERE selling_point = ${this.sellingPoint} 
+           AND fecha >= ${startOfDay.toISOString().split('T')[0]}`,
+      
+      // This week's orders
+      sql`SELECT COUNT(*) as count FROM encargos 
+           WHERE selling_point = ${this.sellingPoint} 
+           AND fecha >= ${startOfWeek.toISOString().split('T')[0]}`,
+      
+      // This month's orders
+      sql`SELECT COUNT(*) as count FROM encargos 
+           WHERE selling_point = ${this.sellingPoint} 
+           AND fecha >= ${startOfMonth.toISOString().split('T')[0]}`,
+      
+      // Pending (not delivered)
+      sql`SELECT COUNT(*) as count FROM encargos 
+           WHERE selling_point = ${this.sellingPoint} AND entregado = false`,
+      
+      // Received (recibido = true)
+      sql`SELECT COUNT(*) as count FROM encargos 
+           WHERE selling_point = ${this.sellingPoint} AND recibido = true`,
+      
+      // Delivered
+      sql`SELECT COUNT(*) as count FROM encargos 
+           WHERE selling_point = ${this.sellingPoint} AND entregado = true`,
+      
+      // Paid (pagado > 0)
+      sql`SELECT COUNT(*) as count FROM encargos 
+           WHERE selling_point = ${this.sellingPoint} AND pagado > 0`,
+      
+      // Unpaid (pagado = 0)
+      sql`SELECT COUNT(*) as count FROM encargos 
+           WHERE selling_point = ${this.sellingPoint} AND pagado = 0`
+    ]);
+
+    return {
+      total: parseInt(results[0][0].count),
+      today: parseInt(results[1][0].count),
+      thisWeek: parseInt(results[2][0].count),
+      thisMonth: parseInt(results[3][0].count),
+      pending: parseInt(results[4][0].count),
+      received: parseInt(results[5][0].count),
+      delivered: parseInt(results[6][0].count),
+      paid: parseInt(results[7][0].count),
+      unpaid: parseInt(results[8][0].count)
+    };
+  }
+
   async createEncargo(encargo: NewEncargoForm): Promise<Encargo> {
     return safeDbOperation(async () => {
       const result = await sql`

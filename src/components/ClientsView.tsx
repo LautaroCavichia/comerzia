@@ -169,9 +169,6 @@ export const ClientsView: React.FC = () => {
                           <span className="text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded-full font-light">
                             {client.ordersHistory.length} pedidos
                           </span>
-                          {client.phone_notifications && (
-                            <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">📱</span>
-                          )}
                           {client.email_notifications && (
                             <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">📧</span>
                           )}
@@ -488,14 +485,15 @@ const ClientDetailPanel: React.FC<ClientDetailPanelProps> = ({
         <div className="border-t pt-6">
           <h4 className="text-lg font-semibold text-gray-900 mb-4">Preferencias de Notificación</h4>
           <div className="space-y-4">
-            <label className="flex items-center">
+            <label className="flex items-center opacity-50">
               <input
                 type="checkbox"
-                checked={phoneNotifications}
-                onChange={(e) => setPhoneNotifications(e.target.checked)}
+                checked={false}
+                disabled
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
               />
               <span className="ml-3 text-gray-700">Notificaciones por teléfono</span>
+              <span className="ml-2 text-sm text-gray-500">(Próximamente)</span>
             </label>
             <label className="flex items-center">
               <input
@@ -677,14 +675,15 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClientAdded 
 
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-gray-700">Preferencias de Notificación</h4>
-            <label className="flex items-center">
+            <label className="flex items-center opacity-50">
               <input
                 type="checkbox"
-                checked={formData.phone_notifications}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone_notifications: e.target.checked }))}
+                checked={false}
+                disabled
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
               />
               <span className="ml-3 text-sm text-gray-700">Notificaciones por teléfono</span>
+              <span className="ml-2 text-xs text-gray-500">(Próximamente)</span>
             </label>
             <label className="flex items-center">
               <input

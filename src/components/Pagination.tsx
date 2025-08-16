@@ -69,7 +69,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <select
           value={itemsPerPage}
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-          className="text-sm border border-stone-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300"
+          className="select-field text-sm"
         >
           <option value={10}>10</option>
           <option value={25}>25</option>

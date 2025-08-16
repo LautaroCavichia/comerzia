@@ -168,7 +168,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
     const encargo = encargos.find(e => e.id === id);
     if (!encargo) return;
 
-    const details = `${encargo.producto} - ${encargo.persona} (${encargo.fecha.toLocaleDateString()})`;
+    const details = `${encargo.producto} - ${encargo.persona} (${encargo.fecha.toLocaleDateString('es-ES')})`;
     setDeleteConfirmation({
       encargoId: id,
       encargoDetails: details
@@ -217,43 +217,43 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
           <table className="min-w-full divide-y divide-white/20">
             <thead className="glass-badge sticky top-0 backdrop-blur-md">
             <tr>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-24">
                 Fecha
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-32">
                 Producto
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-28">
                 Laboratorio
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-24">
                 Almacén
               </th>
-              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider">
+              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider w-20">
                 Pedido
               </th>
-              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider">
+              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider w-20">
                 Recibido
               </th>
-              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider">
+              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider w-20">
                 Entregado
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-28">
                 Persona
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-28">
                 Teléfono
               </th>
-              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider">
+              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider w-20">
                 Avisado
               </th>
-              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider">
+              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider w-24">
                 Pagado (€)
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-36">
                 Observaciones
               </th>
-              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-600 tracking-wider">
+              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-600 tracking-wider w-20">
                 Acciones
               </th>
             </tr>
@@ -267,11 +267,13 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                 <td className="px-3 py-4 whitespace-nowrap text-sm">
                   <EditableCell
                     value={encargo.fecha instanceof Date && !isNaN(encargo.fecha.getTime()) 
-                      ? encargo.fecha.toISOString().split('T')[0] 
-                      : new Date().toISOString().split('T')[0]
+                      ? `${encargo.fecha.getFullYear()}-${String(encargo.fecha.getMonth() + 1).padStart(2, '0')}-${String(encargo.fecha.getDate()).padStart(2, '0')}`
+                      : `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
                     }
                     onSave={(value) => {
-                      const date = new Date(value);
+                      // Parse date as local date, not UTC
+                      const [year, month, day] = value.split('-').map(Number);
+                      const date = new Date(year, month - 1, day);
                       if (!isNaN(date.getTime())) {
                         handleCellEdit(encargo.id, 'fecha', date);
                       }
@@ -289,6 +291,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'producto'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'producto' })}
                     field="producto"
+                    maxWidth="8rem"
                   />
                 </td>
                 
@@ -299,6 +302,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'laboratorio'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'laboratorio' })}
                     field="laboratorio"
+                    maxWidth="7rem"
                   />
                 </td>
                 
@@ -309,6 +313,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'almacen'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'almacen' })}
                     field="almacen"
+                    maxWidth="6rem"
                   />
                 </td>
                 
@@ -340,6 +345,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'persona'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'persona' })}
                     field="persona"
+                    maxWidth="7rem"
                   />
                 </td>
                 
@@ -351,6 +357,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'telefono' })}
                     type="tel"
                     field="telefono"
+                    maxWidth="7rem"
                   />
                 </td>
                 
@@ -385,6 +392,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'observaciones' })}
                     multiline
                     field="observaciones"
+                    maxWidth="9rem"
                   />
                 </td>
                 

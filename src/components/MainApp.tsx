@@ -260,19 +260,30 @@ export const MainApp: React.FC = () => {
           </div>
         </div>
         
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-          {currentView === 'dashboard' ? <Dashboard /> : 
-           currentView === 'clients' ? <ClientsView /> : 
-           currentView === 'settings' ? (
-             <div className="space-y-6">
-               <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
-                 <h2 className="text-2xl font-light text-stone-800 mb-2">Configuración del Sistema</h2>
-                 <p className="text-stone-600 font-light">Herramientas de administración y mantenimiento</p>
-               </div>
-               <DataConsistencyChecker />
-             </div>
-           ) : 
-           <EncargosView />}
+        <main className="relative z-10">
+          {currentView === 'dashboard' ? (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <Dashboard />
+            </div>
+          ) : currentView === 'clients' ? (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <ClientsView />
+            </div>
+          ) : currentView === 'settings' ? (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <div className="space-y-6">
+                <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+                  <h2 className="text-2xl font-light text-stone-800 mb-2">Configuración del Sistema</h2>
+                  <p className="text-stone-600 font-light">Herramientas de administración y mantenimiento</p>
+                </div>
+                <DataConsistencyChecker />
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <EncargosView />
+            </div>
+          )}
         </main>
       </div>
     </DatabaseProvider>

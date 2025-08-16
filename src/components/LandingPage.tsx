@@ -329,6 +329,50 @@ export const LandingPage: React.FC = () => {
           50% { opacity: 0.8; }
         }
         
+        @keyframes subtleGlow {
+          0%, 100% {
+            text-shadow: 
+              0 0 3px rgba(249, 115, 22, 0.15),
+              0 0 6px rgba(249, 115, 22, 0.1);
+            filter: brightness(1);
+          }
+          50% {
+            text-shadow: 
+              0 0 5px rgba(249, 115, 22, 0.25),
+              0 0 10px rgba(249, 115, 22, 0.15);
+            filter: brightness(1.05);
+          }
+        }
+        
+        .encargos-hover {
+          transition: all 0.3s ease-in-out;
+        }
+        
+        .encargos-hover:hover {
+          transform: scale(1.05);
+          text-shadow: 
+            0 0 10px rgba(249, 115, 22, 0.4),
+            0 0 20px rgba(249, 115, 22, 0.3),
+            0 0 30px rgba(249, 115, 22, 0.2);
+          filter: brightness(1.15);
+        }
+        
+        @keyframes buttonGlow {
+          0%, 100% {
+            box-shadow: 
+              0 4px 14px 0 rgba(249, 115, 22, 0.39),
+              0 0 20px rgba(249, 115, 22, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+          }
+          50% {
+            box-shadow: 
+              0 4px 14px 0 rgba(249, 115, 22, 0.5),
+              0 0 30px rgba(249, 115, 22, 0.4),
+              0 0 40px rgba(249, 115, 22, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+          }
+        }
+        
       `}</style>
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-xl border-b border-orange-100 relative z-10">
@@ -362,7 +406,7 @@ export const LandingPage: React.FC = () => {
           {/* Main Heading */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-light text-gray-800 mb-8 sm:mb-10 md:mb-12 leading-[0.9] tracking-tight">
             Organiza tus{' '}
-            <span className="text-orange-500 font-normal relative inline-block">
+            <span className="text-orange-500 font-normal relative inline-block encargos-hover cursor-pointer" style={{animation: 'subtleGlow 6s ease-in-out infinite'}}>
               encargos
               <div className="absolute -bottom-1 sm:-bottom-2 left-0 w-full h-0.5 sm:h-1 bg-gradient-to-r from-orange-300 to-orange-500 rounded-full opacity-60"></div>
             </span>
@@ -383,6 +427,7 @@ export const LandingPage: React.FC = () => {
             <button
               onClick={handleGetStarted}
               className="group inline-flex items-center justify-center px-8 sm:px-10 md:px-12 py-4 sm:py-5 text-lg sm:text-xl font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-xl sm:rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-orange-200 w-full sm:w-auto max-w-xs sm:max-w-none"
+              style={{animation: 'buttonGlow 3s ease-in-out infinite'}}
             >
               <span className="mr-2 sm:mr-3">Comenzar</span>
               <svg 

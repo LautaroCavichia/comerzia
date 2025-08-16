@@ -9,6 +9,7 @@ interface EditableCellProps {
   type?: 'text' | 'date' | 'tel' | 'number';
   multiline?: boolean;
   field?: string; // Field name for specific validation
+  maxWidth?: string; // CSS max-width for truncation
 }
 
 export const EditableCell: React.FC<EditableCellProps> = ({
@@ -18,7 +19,8 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   onEdit,
   type = 'text',
   multiline = false,
-  field
+  field,
+  maxWidth
 }) => {
   const [editValue, setEditValue] = useState(value);
   const [error, setError] = useState<string | null>(null);
@@ -39,10 +41,15 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 
   const formatDateForInput = (val: string) => {
     if (type === 'date' && val) {
+      // If the value is already in YYYY-MM-DD format, return as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+        return val;
+      }
       try {
         const date = new Date(val);
         if (!isNaN(date.getTime())) {
-          return date.toISOString().split('T')[0];
+          // Format as local date to avoid timezone issues
+          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         }
       } catch {}
     }
@@ -113,6 +120,20 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   const formatValue = (val: string) => {
     if (type === 'date' && val) {
       try {
+        // If val is in YYYY-MM-DD format, parse it as local date
+        if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+          const [year, month, day] = val.split('-').map(Number);
+          const date = new Date(year, month - 1, day);
+          if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('es-ES', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            });
+          }
+        }
+        
+        // Fallback for other date formats
         const date = new Date(val);
         if (isNaN(date.getTime())) {
           return 'Fecha inválida';
@@ -176,15 +197,30 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     );
   }
 
+  const formattedValue = value ? formatValue(value) : 'Clic para editar';
+  const shouldTruncate = maxWidth && value && formattedValue.length > 20; // Truncate if longer than 20 chars
+
   return (
     <div
       onClick={onEdit}
-      className="cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2 -my-1 transition-colors"
-      title="Clic para editar"
+      className="cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2 -my-1 transition-colors group relative"
+      title={shouldTruncate ? formattedValue : "Clic para editar"}
+      style={maxWidth ? { maxWidth } : undefined}
     >
-      <span className={`${!value && 'text-gray-400 italic'}`}>
-        {value ? formatValue(value) : 'Clic para editar'}
+      <span 
+        className={`${!value && 'text-gray-400 italic'} ${shouldTruncate ? 'block truncate' : ''}`}
+      >
+        {formattedValue}
       </span>
+      
+      {/* Tooltip for full content */}
+      {shouldTruncate && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 max-w-xs whitespace-normal shadow-lg">
+          {formattedValue}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+        </div>
+      )}
+      
       {multiline && value && (
         <div className="text-xs text-gray-500 mt-1">
           {multiline ? '(Ctrl+Enter para guardar)' : '(Enter para guardar, Esc para cancelar)'}

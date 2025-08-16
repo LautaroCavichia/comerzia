@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Encargo } from '../types';
 import { EncargosTable } from './EncargosTable';
 import { SearchBar } from './SearchBar';
@@ -12,6 +12,7 @@ export const EncargosView: React.FC = () => {
   const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -25,6 +26,15 @@ export const EncargosView: React.FC = () => {
   const [activeQuickFilter, setActiveQuickFilter] = useState<string>('all');
   const [quickFilters, setQuickFilters] = useState<QuickFilter[]>([]);
   const [counts, setCounts] = useState<any>({});
+
+  // Debounce search query to prevent searching on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // Wait 300ms after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const loadCounts = useCallback(async () => {
     try {
@@ -102,9 +112,9 @@ export const EncargosView: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      if (searchQuery.trim()) {
+      if (debouncedSearchQuery.trim()) {
         // Use search when there's a query
-        const searchResults = await db.searchEncargos(searchQuery);
+        const searchResults = await db.searchEncargos(debouncedSearchQuery);
         setEncargos(applyQuickFilter(searchResults));
         setTotalCount(searchResults.length);
         setTotalPages(Math.ceil(searchResults.length / itemsPerPage));
@@ -121,7 +131,7 @@ export const EncargosView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [db, currentPage, itemsPerPage, searchQuery, activeQuickFilter]);
+  }, [db, currentPage, itemsPerPage, debouncedSearchQuery, activeQuickFilter]);
 
   const applyQuickFilter = (data: Encargo[]): Encargo[] => {
     const today = new Date();
@@ -167,6 +177,11 @@ export const EncargosView: React.FC = () => {
     setSearchQuery(query);
     setCurrentPage(1); // Reset to first page when searching
   };
+
+  // Reset to first page when debounced search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery]);
 
   const handleQuickFilterChange = (filterId: string) => {
     setActiveQuickFilter(filterId);

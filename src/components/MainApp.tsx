@@ -175,7 +175,6 @@ export const MainApp: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-light text-stone-800">{user?.displayName}</p>
-                  <p className="text-xs text-stone-500">{user?.username}</p>
                 </div>
                 <button
                   onClick={handleLogout}

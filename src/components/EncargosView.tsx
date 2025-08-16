@@ -6,8 +6,7 @@ import { AddEncargoModal } from './AddEncargoModal';
 import { Pagination } from './Pagination';
 import { QuickFilters, QuickFilter } from './QuickFilters';
 import { useDatabase } from '../context/DatabaseContext';
-import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+import { TableSkeleton } from './TableSkeleton';
 
 export const EncargosView: React.FC = () => {
   const { db } = useDatabase();
@@ -290,76 +289,6 @@ export const EncargosView: React.FC = () => {
     loadCounts();
   };
 
-  if (loading) {
-    return (
-      <SkeletonTheme baseColor="#e7e5e4" highlightColor="#f5f5f4">
-        <div className="space-y-6 transition-all duration-500 ease-in-out opacity-100">
-          {/* Loading Spinner Header */}
-          <div className="flex items-center justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mr-3"></div>
-            <span className="text-stone-600 font-light text-sm">Cargando encargos...</span>
-          </div>
-
-          {/* Quick Filters Skeleton */}
-          <div className="flex flex-wrap gap-2">
-            {[...Array(8)].map((_, i) => (
-              <Skeleton key={i} height={32} width={80} className="rounded-lg" />
-            ))}
-          </div>
-
-          {/* Search and Buttons Skeleton */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              <div className="flex-1 max-w-lg">
-                <Skeleton height={40} className="rounded-xl" />
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Skeleton height={40} width={128} className="rounded-xl" />
-              <Skeleton height={40} width={144} className="rounded-xl" />
-            </div>
-          </div>
-
-          {/* Table Skeleton */}
-          <div className="glass-card overflow-hidden transform transition-all duration-500 ease-in-out">
-            {/* Table Header */}
-            <div className="bg-stone-50/50 border-b border-stone-200/50 px-6 py-4">
-              <div className="grid grid-cols-12 gap-4">
-                {[...Array(12)].map((_, i) => (
-                  <Skeleton key={i} height={16} />
-                ))}
-              </div>
-            </div>
-            
-            {/* Table Rows */}
-            {[...Array(8)].map((_, rowIndex) => (
-              <div key={rowIndex} className="border-b border-stone-100/50 px-6 py-4 transform transition-all duration-300 ease-in-out" style={{ transitionDelay: `${rowIndex * 50}ms` }}>
-                <div className="grid grid-cols-12 gap-4 items-center">
-                  {[...Array(12)].map((_, colIndex) => (
-                    <div key={colIndex} className="space-y-1">
-                      <Skeleton height={16} />
-                      {colIndex < 3 && <Skeleton height={12} width="75%" />}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Pagination Skeleton */}
-          <div className="flex items-center justify-between transform transition-all duration-500 ease-in-out">
-            <Skeleton height={32} width={160} />
-            <div className="flex gap-2">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} height={32} width={32} />
-              ))}
-            </div>
-            <Skeleton height={32} width={128} />
-          </div>
-        </div>
-      </SkeletonTheme>
-    );
-  }
 
   return (
     <div className="space-y-6"
@@ -454,14 +383,18 @@ export const EncargosView: React.FC = () => {
       </div>
 
       <div className="space-y-4">
-        <EncargosTable
-          encargos={encargos}
-          onUpdate={handleEncargoUpdated}
-          onDelete={handleEncargoDeleted}
-        />
+        {loading ? (
+          <TableSkeleton rows={10} />
+        ) : (
+          <EncargosTable
+            encargos={encargos}
+            onUpdate={handleEncargoUpdated}
+            onDelete={handleEncargoDeleted}
+          />
+        )}
 
         {/* Pagination */}
-        {totalCount > 0 && (
+        {totalCount >= 24 && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

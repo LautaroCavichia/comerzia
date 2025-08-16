@@ -20,6 +20,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
 }) => {
   const { db } = useDatabase();
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [notificationModal, setNotificationModal] = useState<{
     order: Encargo;
     client: Persona;
@@ -33,6 +34,28 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
     encargoId: string;
     encargoDetails: string;
   } | null>(null);
+  const [bulkDeleteConfirmation, setBulkDeleteConfirmation] = useState<boolean>(false);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedItems(new Set(encargos.map(e => e.id)));
+    } else {
+      setSelectedItems(new Set());
+    }
+  };
+
+  const handleSelectItem = (id: string, checked: boolean) => {
+    const newSelected = new Set(selectedItems);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const isAllSelected = encargos.length > 0 && selectedItems.size === encargos.length;
+  const isPartiallySelected = selectedItems.size > 0 && selectedItems.size < encargos.length;
 
   // Check if workflow change is valid
   const checkWorkflowValidity = (encargo: Encargo, field: 'pedido' | 'recibido' | 'entregado', newValue: boolean): boolean => {
@@ -188,6 +211,25 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
     }
   };
 
+  const handleBulkDelete = () => {
+    if (selectedItems.size === 0) return;
+    setBulkDeleteConfirmation(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      for (const id of Array.from(selectedItems)) {
+        await db.deleteEncargo(id);
+      }
+      setSelectedItems(new Set());
+      setBulkDeleteConfirmation(false);
+      onDelete();
+    } catch (error) {
+      console.error('Error deleting encargos:', error);
+      alert('Error al eliminar los encargos: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+    }
+  };
+
   if (encargos.length === 0) {
     return (
       <div className="text-center py-12">
@@ -212,11 +254,48 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
 
   return (
     <>
+      {selectedItems.size > 0 && (
+        <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-orange-800">
+              {selectedItems.size} elemento{selectedItems.size !== 1 ? 's' : ''} seleccionado{selectedItems.size !== 1 ? 's' : ''}
+            </span>
+            <button
+              onClick={() => setSelectedItems(new Set())}
+              className="text-xs text-orange-600 hover:text-orange-800 underline"
+            >
+              Desseleccionar todo
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleBulkDelete}
+              className="inline-flex items-center px-3 py-1.5 text-sm text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Eliminar
+            </button>
+          </div>
+        </div>
+      )}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-white/20">
-            <thead className="glass-badge sticky top-0 backdrop-blur-md">
+            <thead className="glass-badge sticky top-0 backdrop-blur-md z-10 bg-white/80">
             <tr>
+              <th className="px-3 py-4 text-center w-12">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  ref={(input) => {
+                    if (input) input.indeterminate = isPartiallySelected;
+                  }}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                />
+              </th>
               <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-24">
                 Fecha
               </th>
@@ -264,6 +343,14 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                 key={encargo.id}
                 className="table-row"
               >
+                <td className="px-3 py-4 whitespace-nowrap text-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.has(encargo.id)}
+                    onChange={(e) => handleSelectItem(encargo.id, e.target.checked)}
+                    className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                  />
+                </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm">
                   <EditableCell
                     value={encargo.fecha instanceof Date && !isNaN(encargo.fecha.getTime()) 
@@ -451,6 +538,20 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
           cancelText="Cancelar"
           onConfirm={confirmDelete}
           onCancel={() => setDeleteConfirmation(null)}
+        />
+      )}
+
+      {bulkDeleteConfirmation && (
+        <ConfirmationDialog
+          isVisible={true}
+          type="danger"
+          title="Eliminar Pedidos Seleccionados"
+          message={`¿Estás seguro de que quieres eliminar ${selectedItems.size} pedido${selectedItems.size !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`}
+          details={[`Se eliminarán ${selectedItems.size} pedido${selectedItems.size !== 1 ? 's' : ''} seleccionado${selectedItems.size !== 1 ? 's' : ''}`]}
+          confirmText="Eliminar Todo"
+          cancelText="Cancelar"
+          onConfirm={confirmBulkDelete}
+          onCancel={() => setBulkDeleteConfirmation(false)}
         />
       )}
     </>

@@ -22,23 +22,28 @@ interface AuthProviderProps {
 const ACCOUNTS = {
   [process.env.REACT_APP_ACCOUNT1_USERNAME || 'farmacia1']: {
     password: process.env.REACT_APP_ACCOUNT1_PASSWORD || 'password1',
-    sellingPoint: 'farmacia1',
+    sellingPoint: process.env.REACT_APP_ACCOUNT1_USERNAME || 'farmacia1',
     displayName: process.env.REACT_APP_ACCOUNT1_DISPLAY_NAME || 'Farmacia Centro'
   },
   [process.env.REACT_APP_ACCOUNT2_USERNAME || 'farmacia2']: {
     password: process.env.REACT_APP_ACCOUNT2_PASSWORD || 'password2',
-    sellingPoint: 'farmacia2',
+    sellingPoint: process.env.REACT_APP_ACCOUNT2_USERNAME || 'farmacia2',
     displayName: process.env.REACT_APP_ACCOUNT2_DISPLAY_NAME || 'Farmacia Norte'
   },
   [process.env.REACT_APP_ACCOUNT3_USERNAME || 'farmacia3']: {
     password: process.env.REACT_APP_ACCOUNT3_PASSWORD || 'password3',
-    sellingPoint: 'farmacia3',
+    sellingPoint: process.env.REACT_APP_ACCOUNT3_USERNAME || 'farmacia3',
     displayName: process.env.REACT_APP_ACCOUNT3_DISPLAY_NAME || 'Farmacia Sur'
   },
   [process.env.REACT_APP_ACCOUNT4_USERNAME || 'farmacia4']: {
     password: process.env.REACT_APP_ACCOUNT4_PASSWORD || 'password4',
-    sellingPoint: 'farmacia4',
+    sellingPoint: process.env.REACT_APP_ACCOUNT4_USERNAME || 'farmacia4',
     displayName: process.env.REACT_APP_ACCOUNT4_DISPLAY_NAME || 'Farmacia Cuatro'
+  },
+  [process.env.REACT_APP_ADMIN_USERNAME || 'admin']: {
+    password: process.env.REACT_APP_ADMIN_PASSWORD || 'admin123',
+    sellingPoint: process.env.REACT_APP_ADMIN_USERNAME || 'admin',
+    displayName: process.env.REACT_APP_ADMIN_DISPLAY_NAME || 'Administrator'
   }
 };
 

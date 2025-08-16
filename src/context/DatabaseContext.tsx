@@ -15,6 +15,9 @@ interface DatabaseProviderProps {
 export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) => {
   const { user } = useAuth();
   
+  // Debug: Log current selling point
+  console.log('Current user selling point:', user?.sellingPoint);
+  
   // Create a database instance with the user's selling point
   const db = new DatabaseService(user?.sellingPoint || 'default');
 

@@ -6,6 +6,7 @@ import DatePicker from 'react-datepicker';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import { useDatabase } from '../context/DatabaseContext';
 import { Persona, Producto, Laboratorio, Almacen } from '../types';
+import { validateEncargoForm, checkPotentialDuplicate, sanitizeInput } from '../lib/validation';
 import "react-datepicker/dist/react-datepicker.css";
 
 const encargoSchema = z.object({
@@ -116,38 +117,94 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
   const onSubmit = async (data: EncargoFormData) => {
     setLoading(true);
     try {
-      const normalizedPhone = normalizePhoneNumber(data.telefono);
+      // Sanitize all text inputs
+      const sanitizedData = {
+        ...data,
+        producto: sanitizeInput(data.producto),
+        laboratorio: sanitizeInput(data.laboratorio),
+        almacen: sanitizeInput(data.almacen),
+        persona: sanitizeInput(data.persona),
+        telefono: sanitizeInput(data.telefono),
+        observaciones: data.observaciones ? sanitizeInput(data.observaciones) : undefined
+      };
+
+      // Additional validation using our custom validators
+      const validation = validateEncargoForm(sanitizedData);
+      if (!validation.isValid) {
+        const firstError = Object.values(validation.errors)[0];
+        alert(`Error de validación: ${firstError}`);
+        setLoading(false);
+        return;
+      }
+
+      const normalizedPhone = normalizePhoneNumber(sanitizedData.telefono);
       
-      // Auto-create non-existing items
-      const existingPersona = personas.find(p => p.nombre === data.persona);
+      // Check for potential duplicates
+      const existingOrders = await db.getEncargos();
+      const potentialDuplicate = checkPotentialDuplicate(
+        {
+          fecha: sanitizedData.fecha,
+          producto: sanitizedData.producto,
+          persona: sanitizedData.persona,
+          telefono: normalizedPhone
+        },
+        existingOrders
+      );
+
+      if (potentialDuplicate) {
+        const confirmDuplicate = window.confirm(
+          `⚠️ POSIBLE DUPLICADO DETECTADO\n\nYa existe un pedido similar:\n` +
+          `• Producto: ${sanitizedData.producto}\n` +
+          `• Cliente: ${sanitizedData.persona}\n` +
+          `• Fecha: ${sanitizedData.fecha.toLocaleDateString()}\n\n` +
+          `¿Estás seguro de que quieres crear este pedido duplicado?`
+        );
+        
+        if (!confirmDuplicate) {
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // Auto-create non-existing items with sanitized data
+      const existingPersona = personas.find(p => p.nombre === sanitizedData.persona);
       if (!existingPersona) {
-        await db.createPersona(data.persona, normalizedPhone);
+        try {
+          await db.createPersona(sanitizedData.persona, normalizedPhone);
+        } catch (error) {
+          if (error instanceof Error && error.message.includes('already exists')) {
+            // Person exists with this phone, continue
+          } else {
+            throw error;
+          }
+        }
       }
 
-      const existingProducto = productos.find(p => p.nombre === data.producto);
+      const existingProducto = productos.find(p => p.nombre === sanitizedData.producto);
       if (!existingProducto) {
-        await db.createProducto(data.producto);
+        await db.createProducto(sanitizedData.producto);
       }
 
-      const existingLaboratorio = laboratorios.find(l => l.nombre === data.laboratorio);
+      const existingLaboratorio = laboratorios.find(l => l.nombre === sanitizedData.laboratorio);
       if (!existingLaboratorio) {
-        await db.createLaboratorio(data.laboratorio);
+        await db.createLaboratorio(sanitizedData.laboratorio);
       }
 
-      const existingAlmacen = almacenes.find(a => a.nombre === data.almacen);
+      const existingAlmacen = almacenes.find(a => a.nombre === sanitizedData.almacen);
       if (!existingAlmacen) {
-        await db.createAlmacen(data.almacen);
+        await db.createAlmacen(sanitizedData.almacen);
       }
       
       await db.createEncargo({
-        ...data,
+        ...sanitizedData,
         telefono: normalizedPhone
       });
 
       onSuccess();
     } catch (error) {
       console.error('Error creating encargo:', error);
-      alert('Error al crear el encargo');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      alert(`Error al crear el encargo: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

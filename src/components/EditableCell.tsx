@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { validateName, validatePhone, validateAmount, validateText, sanitizeInput } from '../lib/validation';
 
 interface EditableCellProps {
   value: string;
@@ -7,6 +8,7 @@ interface EditableCellProps {
   onEdit: () => void;
   type?: 'text' | 'date' | 'tel' | 'number';
   multiline?: boolean;
+  field?: string; // Field name for specific validation
 }
 
 export const EditableCell: React.FC<EditableCellProps> = ({
@@ -15,9 +17,11 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   isEditing,
   onEdit,
   type = 'text',
-  multiline = false
+  multiline = false,
+  field
 }) => {
   const [editValue, setEditValue] = useState(value);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -57,10 +61,49 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     }
   };
 
-  const handleSave = () => {
-    if (editValue.trim() !== value.trim()) {
-      onSave(editValue.trim());
+  const validateValue = (val: string): { isValid: boolean; error?: string } => {
+    const sanitized = sanitizeInput(val);
+    
+    if (!field) {
+      return { isValid: true };
     }
+
+    switch (field) {
+      case 'persona':
+      case 'nombre':
+        return validateName(sanitized);
+      case 'telefono':
+        return validatePhone(sanitized);
+      case 'pagado':
+        return validateAmount(sanitized);
+      case 'producto':
+      case 'laboratorio':
+      case 'almacen':
+        return validateText(sanitized, field, true, 255);
+      case 'observaciones':
+        return validateText(sanitized, field, false, 1000);
+      default:
+        return validateText(sanitized, field, false, 500);
+    }
+  };
+
+  const handleSave = () => {
+    const trimmedValue = editValue.trim();
+    
+    if (trimmedValue === value.trim()) {
+      setError(null);
+      return; // No change
+    }
+
+    const validation = validateValue(trimmedValue);
+    
+    if (!validation.isValid) {
+      setError(validation.error || 'Valor inválido');
+      return;
+    }
+
+    setError(null);
+    onSave(sanitizeInput(trimmedValue));
   };
 
   const handleCancel = () => {
@@ -87,26 +130,31 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   };
 
   if (isEditing) {
+    const hasError = !!error;
+    const baseClassName = "w-full border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2";
+    const className = hasError 
+      ? `${baseClassName} border-red-500 focus:ring-red-500 focus:ring-opacity-50`
+      : `${baseClassName} border-primary focus:ring-primary focus:ring-opacity-50`;
+
     const commonProps = {
       ref: inputRef as any,
       value: type === 'date' ? formatDateForInput(editValue) : editValue,
-      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setEditValue(e.target.value),
+      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setEditValue(e.target.value);
+        if (error) setError(null); // Clear error on new input
+      },
       onKeyDown: handleKeyDown,
       onBlur: handleSave,
-      className: "w-full border border-primary rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
+      className
     };
 
-    if (multiline) {
-      return (
-        <textarea
-          {...commonProps}
-          rows={2}
-          placeholder="Observaciones..."
-        />
-      );
-    }
-
-    return (
+    const inputElement = multiline ? (
+      <textarea
+        {...commonProps}
+        rows={2}
+        placeholder="Observaciones..."
+      />
+    ) : (
       <input
         {...commonProps}
         type={type}
@@ -114,6 +162,17 @@ export const EditableCell: React.FC<EditableCellProps> = ({
         min={type === 'number' ? '0' : undefined}
         placeholder={type === 'tel' ? '+34...' : type === 'number' ? '0.00' : ''}
       />
+    );
+
+    return (
+      <div className="relative">
+        {inputElement}
+        {error && (
+          <div className="absolute top-full left-0 mt-1 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1 z-10 whitespace-nowrap shadow-sm">
+            {error}
+          </div>
+        )}
+      </div>
     );
   }
 

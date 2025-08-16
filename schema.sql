@@ -9,6 +9,9 @@ CREATE TABLE personas (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     nombre VARCHAR(255) NOT NULL,
     telefono VARCHAR(20) NOT NULL,
+    email VARCHAR(255),
+    phone_notifications BOOLEAN DEFAULT FALSE,
+    email_notifications BOOLEAN DEFAULT FALSE,
     selling_point VARCHAR(50) NOT NULL DEFAULT 'default',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -75,26 +78,25 @@ CREATE INDEX idx_productos_selling_point ON productos(selling_point);
 CREATE INDEX idx_laboratorios_selling_point ON laboratorios(selling_point);
 CREATE INDEX idx_almacenes_selling_point ON almacenes(selling_point);
 CREATE INDEX idx_personas_telefono ON personas(telefono);
+CREATE INDEX idx_personas_email ON personas(email) WHERE email IS NOT NULL;
 
 -- Sample data for almacenes (common storage locations)
 INSERT INTO almacenes (nombre) VALUES
-    ('Almacén Principal'),
-    ('Almacén Secundario'),
-    ('Refrigerado'),
-    ('Farmacia'),
-    ('Depósito');
+    ('Actibios');
 
 -- Sample data for testing (optional)
 INSERT INTO productos (nombre) VALUES
-    ('Lentes de Contacto'),
-    ('Armazón Oftálmico'),
-    ('Lentes de Sol'),
-    ('Cristales Progresivos');
+    ('Acido glicolico'),
+    ('Henna'),
+    ('Oregano'),
+    ('Desodorante');
 
 INSERT INTO laboratorios (nombre) VALUES
-    ('Laboratorio Central'),
-    ('Óptica Express'),
-    ('Visión Total');
+    ('Health-Aid'),
+    ('Kids'),
+    ('Romero'),
+    ('Colore natural');
+
 
 INSERT INTO personas (nombre, telefono) VALUES
     ('María González', '+34612345678'),

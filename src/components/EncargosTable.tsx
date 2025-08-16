@@ -4,6 +4,8 @@ import { EditableCell } from './EditableCell';
 import { ToggleCell } from './ToggleCell';
 import { useDatabase } from '../context/DatabaseContext';
 import { NotificationModal } from './NotificationModal';
+import { WorkflowValidationModal } from './WorkflowValidationModal';
+import { ConfirmationDialog } from './ConfirmationDialog';
 
 interface EncargosTableProps {
   encargos: Encargo[];
@@ -22,25 +24,115 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
     order: Encargo;
     client: Persona;
   } | null>(null);
+  const [workflowModal, setWorkflowModal] = useState<{
+    encargo: Encargo;
+    field: 'pedido' | 'recibido' | 'entregado';
+    newValue: boolean;
+  } | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    encargoId: string;
+    encargoDetails: string;
+  } | null>(null);
+
+  // Check if workflow change is valid
+  const checkWorkflowValidity = (encargo: Encargo, field: 'pedido' | 'recibido' | 'entregado', newValue: boolean): boolean => {
+    if (field === 'recibido' && newValue && !encargo.pedido) {
+      return false; // Can't receive if not ordered
+    }
+    if (field === 'entregado' && newValue && !encargo.recibido) {
+      return false; // Can't deliver if not received
+    }
+    if (field === 'pedido' && !newValue && (encargo.recibido || encargo.entregado)) {
+      return false; // Can't unorder if already received/delivered
+    }
+    if (field === 'recibido' && !newValue && encargo.entregado) {
+      return false; // Can't unreceive if already delivered
+    }
+    return true;
+  };
 
   const handleCellEdit = async (id: string, field: string, value: any) => {
     try {
-      await db.updateEncargo({ id, [field]: value });
+      // Use cascade update for persona and telefono fields to maintain data consistency
+      if (field === 'persona' || field === 'telefono') {
+        await db.updateEncargoWithPersonaCascade({ id, [field]: value });
+      } else {
+        await db.updateEncargo({ id, [field]: value });
+      }
       onUpdate();
       setEditingCell(null);
     } catch (error) {
       console.error('Error updating encargo:', error);
-      alert('Error al actualizar el encargo');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      alert(`Error al actualizar el encargo: ${errorMessage}`);
+    }
+  };
+
+  const handleWorkflowToggle = async (encargo: Encargo, field: 'pedido' | 'recibido' | 'entregado', newValue: boolean) => {
+    // Check if the change violates workflow rules
+    if (!checkWorkflowValidity(encargo, field, newValue)) {
+      setWorkflowModal({ encargo, field, newValue });
+      return;
+    }
+
+    // If valid, proceed with the change
+    if (field === 'recibido' && newValue) {
+      handleRecibidoChange(encargo, newValue);
+    } else {
+      handleCellEdit(encargo.id, field, newValue);
+    }
+  };
+
+  const handleWorkflowConfirm = async (updatePrevious: boolean) => {
+    if (!workflowModal) return;
+
+    const { encargo, field, newValue } = workflowModal;
+
+    try {
+      if (newValue) {
+        // Setting to true - need to update previous steps if requested
+        if (field === 'recibido' && updatePrevious && !encargo.pedido) {
+          await db.updateEncargo({ id: encargo.id, pedido: true, recibido: true });
+        } else if (field === 'entregado') {
+          const updates: any = { entregado: true };
+          if (updatePrevious) {
+            if (!encargo.pedido) updates.pedido = true;
+            if (!encargo.recibido) updates.recibido = true;
+          }
+          await db.updateEncargo({ id: encargo.id, ...updates });
+        } else {
+          await db.updateEncargo({ id: encargo.id, [field]: newValue });
+        }
+      } else {
+        // Setting to false - need to update subsequent steps
+        if (field === 'pedido') {
+          await db.updateEncargo({ 
+            id: encargo.id, 
+            pedido: false, 
+            recibido: false, 
+            entregado: false 
+          });
+        } else if (field === 'recibido') {
+          await db.updateEncargo({ 
+            id: encargo.id, 
+            recibido: false, 
+            entregado: false 
+          });
+        }
+      }
+
+      onUpdate();
+      setWorkflowModal(null);
+    } catch (error) {
+      console.error('Error updating workflow:', error);
+      alert('Error al actualizar el estado del encargo');
     }
   };
 
   const handleRecibidoChange = async (encargo: Encargo, value: boolean) => {
     if (value) {
       try {
-        const personas = await db.getPersonas();
-        const client = personas.find(p => 
-          p.telefono === encargo.telefono || p.nombre === encargo.persona
-        );
+        const client = await db.findPersonaByContact(encargo.telefono, encargo.persona);
         
         // Only show modal if client exists and has at least one notification preference enabled
         if (client && (client.phone_notifications || client.email_notifications)) {
@@ -72,15 +164,27 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('¿Está seguro de que desea eliminar este encargo?')) {
-      try {
-        await db.deleteEncargo(id);
-        onDelete();
-      } catch (error) {
-        console.error('Error deleting encargo:', error);
-        alert('Error al eliminar el encargo');
-      }
+  const handleDelete = (id: string) => {
+    const encargo = encargos.find(e => e.id === id);
+    if (!encargo) return;
+
+    const details = `${encargo.producto} - ${encargo.persona} (${encargo.fecha.toLocaleDateString()})`;
+    setDeleteConfirmation({
+      encargoId: id,
+      encargoDetails: details
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmation) return;
+    
+    try {
+      await db.deleteEncargo(deleteConfirmation.encargoId);
+      onDelete();
+      setDeleteConfirmation(null);
+    } catch (error) {
+      console.error('Error deleting encargo:', error);
+      alert('Error al eliminar el encargo: ' + (error instanceof Error ? error.message : 'Error desconocido'));
     }
   };
 
@@ -155,7 +259,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/20">
-            {encargos.map((encargo, index) => (
+            {encargos.map((encargo) => (
               <tr
                 key={encargo.id}
                 className="table-row"
@@ -184,6 +288,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     onSave={(value) => handleCellEdit(encargo.id, 'producto', value)}
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'producto'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'producto' })}
+                    field="producto"
                   />
                 </td>
                 
@@ -193,6 +298,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     onSave={(value) => handleCellEdit(encargo.id, 'laboratorio', value)}
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'laboratorio'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'laboratorio' })}
+                    field="laboratorio"
                   />
                 </td>
                 
@@ -202,27 +308,28 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     onSave={(value) => handleCellEdit(encargo.id, 'almacen', value)}
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'almacen'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'almacen' })}
+                    field="almacen"
                   />
                 </td>
                 
                 <td className="px-3 py-4 whitespace-nowrap text-center">
                   <ToggleCell
                     value={encargo.pedido}
-                    onChange={(value) => handleCellEdit(encargo.id, 'pedido', value)}
+                    onChange={(value) => handleWorkflowToggle(encargo, 'pedido', value)}
                   />
                 </td>
                 
                 <td className="px-3 py-4 whitespace-nowrap text-center">
                   <ToggleCell
                     value={encargo.recibido}
-                    onChange={(value) => handleRecibidoChange(encargo, value)}
+                    onChange={(value) => handleWorkflowToggle(encargo, 'recibido', value)}
                   />
                 </td>
                 
                 <td className="px-3 py-4 whitespace-nowrap text-center">
                   <ToggleCell
                     value={encargo.entregado}
-                    onChange={(value) => handleCellEdit(encargo.id, 'entregado', value)}
+                    onChange={(value) => handleWorkflowToggle(encargo, 'entregado', value)}
                   />
                 </td>
                 
@@ -232,6 +339,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     onSave={(value) => handleCellEdit(encargo.id, 'persona', value)}
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'persona'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'persona' })}
+                    field="persona"
                   />
                 </td>
                 
@@ -242,6 +350,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'telefono'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'telefono' })}
                     type="tel"
+                    field="telefono"
                   />
                 </td>
                 
@@ -264,6 +373,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'pagado'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'pagado' })}
                     type="number"
+                    field="pagado"
                   />
                 </td>
                 
@@ -274,6 +384,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'observaciones'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'observaciones' })}
                     multiline
+                    field="observaciones"
                   />
                 </td>
                 
@@ -307,6 +418,31 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
           isVisible={true}
           onClose={() => setNotificationModal(null)}
           onSendNotification={handleSendNotification}
+        />
+      )}
+
+      {workflowModal && (
+        <WorkflowValidationModal
+          isVisible={true}
+          encargo={workflowModal.encargo}
+          field={workflowModal.field}
+          newValue={workflowModal.newValue}
+          onConfirm={handleWorkflowConfirm}
+          onCancel={() => setWorkflowModal(null)}
+        />
+      )}
+
+      {deleteConfirmation && (
+        <ConfirmationDialog
+          isVisible={true}
+          type="danger"
+          title="Eliminar Pedido"
+          message="¿Estás seguro de que quieres eliminar este pedido? Esta acción no se puede deshacer."
+          details={[`Pedido: ${deleteConfirmation.encargoDetails}`]}
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteConfirmation(null)}
         />
       )}
     </>

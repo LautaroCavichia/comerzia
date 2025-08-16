@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDatabase } from '../context/DatabaseContext';
 import { Persona } from '../types';
+import { validatePersonaForm, sanitizeInput } from '../lib/validation';
 
 interface ClientProfile extends Persona {
   ordersHistory: Array<{
@@ -31,7 +32,7 @@ export const ClientsView: React.FC = () => {
       
       const clientsWithOrders = await Promise.all(
         personas.map(async (persona) => {
-          const orders = await db.searchEncargos(persona.telefono);
+          const orders = await db.getEncargosForPersona(persona.id);
           return {
             ...persona,
             ordersHistory: orders.map(order => ({
@@ -59,15 +60,36 @@ export const ClientsView: React.FC = () => {
   };
 
   const handleDeleteClient = async (clientId: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+
+    const hasOrders = client.ordersHistory.length > 0;
+    
+    let confirmMessage = `¿Estás seguro de que quieres eliminar a ${client.nombre}?`;
+    if (hasOrders) {
+      confirmMessage = `⚠️ ATENCIÓN: ${client.nombre} tiene ${client.ordersHistory.length} pedido(s) asociado(s).\n\nNo se puede eliminar un cliente con pedidos existentes. Primero debes:\n1. Eliminar todos sus pedidos, O\n2. Reasignar los pedidos a otro cliente\n\n¿Quieres ver la lista de pedidos?`;
+    }
+
+    if (window.confirm(confirmMessage)) {
+      if (hasOrders) {
+        // Show orders instead of deleting
+        alert(`Pedidos de ${client.nombre}:\n\n${client.ordersHistory.map((order, i) => 
+          `${i + 1}. ${order.producto} - ${order.fecha.toLocaleDateString()} (${order.entregado ? 'Entregado' : 'Pendiente'})`
+        ).join('\n')}\n\nElimina estos pedidos primero desde la tabla de Encargos.`);
+        return;
+      }
+
       try {
         await db.deletePersona(clientId);
         await loadClients();
         if (selectedClient && selectedClient.id === clientId) {
           setSelectedClient(null);
         }
+        alert(`Cliente ${client.nombre} eliminado correctamente.`);
       } catch (error) {
         console.error('Error deleting client:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+        alert(`Error al eliminar cliente: ${errorMessage}`);
       }
     }
   };
@@ -209,6 +231,10 @@ const ClientDetailPanel: React.FC<ClientDetailPanelProps> = ({
   const [emailNotifications, setEmailNotifications] = useState(client.email_notifications);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [emailValue, setEmailValue] = useState(client.email || '');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState(client.nombre);
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [phoneValue, setPhoneValue] = useState(client.telefono);
 
   const { db } = useDatabase();
   
@@ -233,6 +259,48 @@ const ClientDetailPanel: React.FC<ClientDetailPanelProps> = ({
     setIsEditingEmail(false);
   };
 
+  const handleNameUpdate = async () => {
+    if (!nameValue.trim()) {
+      alert('El nombre no puede estar vacío');
+      return;
+    }
+    
+    try {
+      await db.updatePersonaName(client.id, nameValue.trim());
+      setIsEditingName(false);
+      window.location.reload(); // Reload to show cascade updates
+    } catch (error) {
+      console.error('Error updating name:', error);
+      alert('Error al actualizar el nombre: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+    }
+  };
+
+  const handleCancelNameEdit = () => {
+    setNameValue(client.nombre);
+    setIsEditingName(false);
+  };
+
+  const handlePhoneUpdate = async () => {
+    if (!phoneValue.trim()) {
+      alert('El teléfono no puede estar vacío');
+      return;
+    }
+    
+    try {
+      await db.updatePersonaPhone(client.id, phoneValue.trim());
+      setIsEditingPhone(false);
+      window.location.reload(); // Reload to show cascade updates
+    } catch (error) {
+      console.error('Error updating phone:', error);
+      alert('Error al actualizar el teléfono: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+    }
+  };
+
+  const handleCancelPhoneEdit = () => {
+    setPhoneValue(client.telefono);
+    setIsEditingPhone(false);
+  };
+
   const totalSpent = client.ordersHistory.reduce((sum, order) => sum + order.pagado, 0);
   const completedOrders = client.ordersHistory.filter(order => order.entregado).length;
 
@@ -241,15 +309,102 @@ const ClientDetailPanel: React.FC<ClientDetailPanelProps> = ({
       {/* Client Info */}
       <div className="glass-card p-6">
         <div className="flex items-start justify-between mb-6">
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">{client.nombre}</h3>
+          <div className="flex-1">
+            {/* Editable Name */}
+            <div className="flex items-center mb-2">
+              {isEditingName ? (
+                <div className="flex items-center space-x-2 flex-1">
+                  <input
+                    type="text"
+                    value={nameValue}
+                    onChange={(e) => setNameValue(e.target.value)}
+                    className="glass-input flex-1 text-xl font-bold"
+                    placeholder="Nombre del cliente"
+                  />
+                  <button
+                    onClick={handleNameUpdate}
+                    className="text-green-600 hover:text-green-700 p-1"
+                    title="Guardar nombre"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={handleCancelNameEdit}
+                    className="text-gray-400 hover:text-gray-600 p-1"
+                    title="Cancelar"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2 flex-1">
+                  <h3 className="text-xl font-bold text-gray-900">{client.nombre}</h3>
+                  <button
+                    onClick={() => setIsEditingName(true)}
+                    className="text-gray-400 hover:text-primary-600 p-1"
+                    title="Editar nombre"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="mt-2 space-y-1">
-              <p className="text-gray-600 flex items-center">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Editable Phone */}
+              <div className="flex items-center">
+                <svg className="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
-                {client.telefono}
-              </p>
+                {isEditingPhone ? (
+                  <div className="flex items-center space-x-2 flex-1">
+                    <input
+                      type="tel"
+                      value={phoneValue}
+                      onChange={(e) => setPhoneValue(e.target.value)}
+                      className="glass-input flex-1 text-sm py-1 px-2"
+                      placeholder="Número de teléfono"
+                    />
+                    <button
+                      onClick={handlePhoneUpdate}
+                      className="text-green-600 hover:text-green-700 p-1"
+                      title="Guardar teléfono"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={handleCancelPhoneEdit}
+                      className="text-gray-400 hover:text-gray-600 p-1"
+                      title="Cancelar"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 flex-1">
+                    <span className="text-gray-600">{client.telefono}</span>
+                    <button
+                      onClick={() => setIsEditingPhone(true)}
+                      className="text-gray-400 hover:text-primary-600 p-1"
+                      title="Editar teléfono"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="flex items-center">
                 <svg className="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -418,22 +573,47 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClientAdded 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.nombre.trim() || !formData.telefono.trim()) {
+    // Sanitize inputs
+    const sanitizedData = {
+      nombre: sanitizeInput(formData.nombre),
+      telefono: sanitizeInput(formData.telefono),
+      email: formData.email ? sanitizeInput(formData.email) : undefined
+    };
+
+    // Validate form data
+    const validation = validatePersonaForm({
+      nombre: sanitizedData.nombre,
+      telefono: sanitizedData.telefono,
+      email: sanitizedData.email
+    });
+
+    if (!validation.isValid) {
+      const errorMessage = Object.entries(validation.errors)
+        .map(([field, error]) => `${field}: ${error}`)
+        .join('\n');
+      alert(`Errores de validación:\n${errorMessage}`);
       return;
     }
 
     setLoading(true);
     try {
       await db.createPersonaWithNotifications({
-        nombre: formData.nombre,
-        telefono: formData.telefono,
-        email: formData.email || undefined,
+        nombre: sanitizedData.nombre,
+        telefono: sanitizedData.telefono,
+        email: sanitizedData.email,
         phone_notifications: formData.phone_notifications,
-        email_notifications: formData.email_notifications && !!formData.email
+        email_notifications: formData.email_notifications && !!sanitizedData.email
       });
       onClientAdded();
     } catch (error) {
       console.error('Error creating client:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      
+      if (errorMessage.includes('already exists')) {
+        alert('Ya existe un cliente con este número de teléfono. Por favor, usa un número diferente.');
+      } else {
+        alert(`Error al crear cliente: ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }

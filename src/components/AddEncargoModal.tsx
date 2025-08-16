@@ -317,17 +317,26 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
         {/* Content - Scrollable */}
         <div className="flex-1 overflow-y-auto">
           <form onSubmit={handleSubmit(onSubmit)} className="px-6 sm:px-8 py-8">
-            {/* Basic Information Section */}
+            
+            {/* Required Fields Section */}
             <div className="mb-10">
-              <h3 className="text-lg font-light text-stone-800 mb-6">Información Básica</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="flex items-center mb-6">
+                <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                <h3 className="text-lg font-light text-stone-800">Campos Obligatorios</h3>
+              </div>
+              
+              {/* Date and Product Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-light text-stone-700">Fecha *</label>
+                  <label className="flex items-center text-sm font-light text-stone-700">
+                    <span className="text-red-500 mr-1">*</span>
+                    Fecha
+                  </label>
                   <DatePicker
                     selected={watchedFecha}
                     onChange={(date: Date | null) => date && setValue('fecha', date)}
                     dateFormat="dd/MM/yyyy"
-                    className="w-full px-4 py-3.5 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
+                    className="w-full px-4 py-3.5 bg-white/70 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all text-sm font-light backdrop-blur-sm"
                     placeholderText="Seleccionar fecha"
                   />
                   {errors.fecha && (
@@ -336,12 +345,15 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-light text-stone-700">Producto *</label>
+                  <label className="flex items-center text-sm font-light text-stone-700">
+                    <span className="text-red-500 mr-1">*</span>
+                    Producto
+                  </label>
                   <div className="relative">
                     <input
                       {...register('producto')}
                       list="productos"
-                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
+                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all text-sm font-light backdrop-blur-sm"
                       placeholder="Escribir o seleccionar producto"
                     />
                     <datalist id="productos">
@@ -361,14 +373,20 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                     <p className="text-xs text-red-500">{errors.producto.message}</p>
                   )}
                 </div>
+              </div>
 
+              {/* Lab and Storage Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-light text-stone-700">Laboratorio *</label>
+                  <label className="flex items-center text-sm font-light text-stone-700">
+                    <span className="text-red-500 mr-1">*</span>
+                    Laboratorio
+                  </label>
                   <div className="relative">
                     <input
                       {...register('laboratorio')}
                       list="laboratorios"
-                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
+                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all text-sm font-light backdrop-blur-sm"
                       placeholder="Escribir o seleccionar laboratorio"
                     />
                     <datalist id="laboratorios">
@@ -390,12 +408,15 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-light text-stone-700">Almacén *</label>
+                  <label className="flex items-center text-sm font-light text-stone-700">
+                    <span className="text-red-500 mr-1">*</span>
+                    Almacén
+                  </label>
                   <div className="relative">
                     <input
                       {...register('almacen')}
                       list="almacenes"
-                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
+                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all text-sm font-light backdrop-blur-sm"
                       placeholder="Escribir o seleccionar almacén"
                     />
                     <datalist id="almacenes">
@@ -416,19 +437,19 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                   )}
                 </div>
               </div>
-            </div>
 
-            {/* Contact Information Section */}
-            <div className="mb-10">
-              <h3 className="text-lg font-light text-stone-800 mb-6">Información de Contacto</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Contact Info Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-light text-stone-700">Persona *</label>
+                  <label className="flex items-center text-sm font-light text-stone-700">
+                    <span className="text-red-500 mr-1">*</span>
+                    Persona
+                  </label>
                   <div className="relative">
                     <input
                       {...register('persona')}
                       list="personas"
-                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
+                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all text-sm font-light backdrop-blur-sm"
                       placeholder="Escribir o seleccionar persona"
                     />
                     <datalist id="personas">
@@ -450,43 +471,100 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-light text-stone-700">Teléfono *</label>
+                  <label className="flex items-center text-sm font-light text-stone-700">
+                    <span className="text-red-500 mr-1">*</span>
+                    Teléfono
+                  </label>
                   <input
                     {...register('telefono')}
                     type="tel"
                     placeholder="+34 612 345 678"
-                    className="w-full px-4 py-3.5 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
+                    className="w-full px-4 py-3.5 bg-white/70 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all text-sm font-light backdrop-blur-sm"
                   />
                   {errors.telefono && (
                     <p className="text-xs text-red-500">{errors.telefono.message}</p>
                   )}
                 </div>
+              </div>
+            </div>
 
+            {/* Optional Fields Section */}
+            <div className="mb-10">
+              <div className="flex items-center mb-6">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                <h3 className="text-lg font-light text-stone-800">Campos Opcionales</h3>
+              </div>
+              
+              {/* Email and Payment Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-light text-stone-700">Email</label>
+                  <label className="flex items-center text-sm font-light text-stone-700">
+                    <span className="text-blue-500 mr-1">○</span>
+                    Email
+                  </label>
                   <input
                     {...register('email')}
                     type="email"
                     placeholder="ejemplo@email.com"
-                    className="w-full px-4 py-3.5 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
+                    className="w-full px-4 py-3.5 bg-white/70 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all text-sm font-light backdrop-blur-sm"
                   />
                   {errors.email && (
                     <p className="text-xs text-red-500">{errors.email.message}</p>
                   )}
                 </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-light text-stone-700">
+                    <span className="text-blue-500 mr-1">○</span>
+                    Precio Pagado (€)
+                  </label>
+                  <div className="relative">
+                    <input
+                      {...register('pagado', { valueAsNumber: true })}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      className="w-full pl-10 pr-4 py-3.5 bg-white/70 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all text-sm font-light backdrop-blur-sm"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-stone-400 text-sm font-light">€</span>
+                    </div>
+                  </div>
+                  {errors.pagado && (
+                    <p className="text-xs text-red-500">{errors.pagado.message}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Observations */}
+              <div className="space-y-2 mb-6">
+                <label className="flex items-center text-sm font-light text-stone-700">
+                  <span className="text-blue-500 mr-1">○</span>
+                  Observaciones
+                </label>
+                <textarea
+                  {...register('observaciones')}
+                  rows={3}
+                  placeholder="Información adicional sobre el encargo..."
+                  className="w-full px-4 py-3.5 bg-white/70 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all text-sm font-light backdrop-blur-sm resize-none"
+                />
               </div>
 
               {/* Notification Preferences */}
-              <div className="mt-6">
-                <h4 className="text-md font-light text-stone-800 mb-4">Preferencias de Notificación</h4>
+              <div className="space-y-4">
+                <label className="flex items-center text-sm font-light text-stone-700">
+                  <span className="text-blue-500 mr-1">○</span>
+                  Preferencias de Notificación
+                </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label className="group cursor-pointer">
-                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
+                    <div className="p-4 bg-white/70 border border-blue-200 rounded-xl hover:bg-blue-50 transition-colors backdrop-blur-sm">
                       <div className="flex items-center">
                         <input
                           {...register('phone_notifications')}
                           type="checkbox"
-                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
+                          className="w-4 h-4 rounded border-blue-300 text-blue-500 focus:ring-blue-500/20 transition-colors"
                         />
                         <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Notificaciones por teléfono</span>
                       </div>
@@ -494,12 +572,12 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                   </label>
 
                   <label className="group cursor-pointer">
-                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
+                    <div className="p-4 bg-white/70 border border-blue-200 rounded-xl hover:bg-blue-50 transition-colors backdrop-blur-sm">
                       <div className="flex items-center">
                         <input
                           {...register('email_notifications')}
                           type="checkbox"
-                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
+                          className="w-4 h-4 rounded border-blue-300 text-blue-500 focus:ring-blue-500/20 transition-colors"
                         />
                         <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Notificaciones por email</span>
                       </div>
@@ -509,95 +587,65 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
               </div>
             </div>
 
-            {/* Status & Payment Section */}
+            {/* Status Section */}
             <div className="mb-10">
-              <h3 className="text-lg font-light text-stone-800 mb-6">Estado y Pago</h3>
-              <div className="space-y-8">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <label className="group cursor-pointer">
-                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
-                      <div className="flex items-center">
-                        <input
-                          {...register('pedido')}
-                          type="checkbox"
-                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
-                        />
-                        <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Pedido</span>
-                      </div>
-                    </div>
-                  </label>
-
-                  <label className="group cursor-pointer">
-                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
-                      <div className="flex items-center">
-                        <input
-                          {...register('recibido')}
-                          type="checkbox"
-                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
-                        />
-                        <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Recibido</span>
-                      </div>
-                    </div>
-                  </label>
-
-                  <label className="group cursor-pointer">
-                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
-                      <div className="flex items-center">
-                        <input
-                          {...register('entregado')}
-                          type="checkbox"
-                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
-                        />
-                        <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Entregado</span>
-                      </div>
-                    </div>
-                  </label>
-
-                  <label className="group cursor-pointer">
-                    <div className="p-4 bg-white/70 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors backdrop-blur-sm">
-                      <div className="flex items-center">
-                        <input
-                          {...register('avisado')}
-                          type="checkbox"
-                          className="w-4 h-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500/20 transition-colors"
-                        />
-                        <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Avisado</span>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-light text-stone-700">Precio Pagado (€)</label>
-                    <div className="relative">
+              <div className="flex items-center mb-6">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                <h3 className="text-lg font-light text-stone-800">Estado del Encargo</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <label className="group cursor-pointer">
+                  <div className="p-4 bg-white/70 border border-green-200 rounded-xl hover:bg-green-50 transition-colors backdrop-blur-sm">
+                    <div className="flex items-center">
                       <input
-                        {...register('pagado', { valueAsNumber: true })}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        className="w-full pl-10 pr-4 py-3.5 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
+                        {...register('pedido')}
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-green-300 text-green-500 focus:ring-green-500/20 transition-colors"
                       />
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-stone-400 text-sm font-light">€</span>
-                      </div>
+                      <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Pedido</span>
                     </div>
-                    {errors.pagado && (
-                      <p className="text-xs text-red-500">{errors.pagado.message}</p>
-                    )}
                   </div>
+                </label>
 
-                  <div className="space-y-2">
-                    <label className="block text-sm font-light text-stone-700">Observaciones</label>
-                    <textarea
-                      {...register('observaciones')}
-                      rows={4}
-                      placeholder="Información adicional sobre el encargo..."
-                      className="w-full px-4 py-3.5 bg-white/70 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm resize-none"
-                    />
+                <label className="group cursor-pointer">
+                  <div className="p-4 bg-white/70 border border-green-200 rounded-xl hover:bg-green-50 transition-colors backdrop-blur-sm">
+                    <div className="flex items-center">
+                      <input
+                        {...register('recibido')}
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-green-300 text-green-500 focus:ring-green-500/20 transition-colors"
+                      />
+                      <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Recibido</span>
+                    </div>
                   </div>
-                </div>
+                </label>
+
+                <label className="group cursor-pointer">
+                  <div className="p-4 bg-white/70 border border-green-200 rounded-xl hover:bg-green-50 transition-colors backdrop-blur-sm">
+                    <div className="flex items-center">
+                      <input
+                        {...register('entregado')}
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-green-300 text-green-500 focus:ring-green-500/20 transition-colors"
+                      />
+                      <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Entregado</span>
+                    </div>
+                  </div>
+                </label>
+
+                <label className="group cursor-pointer">
+                  <div className="p-4 bg-white/70 border border-green-200 rounded-xl hover:bg-green-50 transition-colors backdrop-blur-sm">
+                    <div className="flex items-center">
+                      <input
+                        {...register('avisado')}
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-green-300 text-green-500 focus:ring-green-500/20 transition-colors"
+                      />
+                      <span className="ml-3 text-sm font-light text-stone-700 group-hover:text-stone-900">Avisado</span>
+                    </div>
+                  </div>
+                </label>
               </div>
             </div>
           </form>

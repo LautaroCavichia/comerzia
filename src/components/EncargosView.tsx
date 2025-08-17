@@ -297,18 +297,14 @@ export const EncargosView: React.FC = () => {
 
 
   return (
-    <div className="space-y-6"
-         style={{ animation: 'fadeIn 0.7s ease-out forwards' }}>
-      <style>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-      `}</style>
+    <div 
+      className="space-y-6 animate-fade-in"
+      style={{
+        background: 'radial-gradient(ellipse at top, rgba(249, 115, 22, 0.02) 0%, transparent 50%)',
+        minHeight: '100vh',
+        paddingBottom: '2rem'
+      }}
+    >
 
       {error && (
         <div className="glass-card border border-red-200/30 p-4 bg-red-50/50 transition-all duration-500 ease-in-out">
@@ -333,58 +329,80 @@ export const EncargosView: React.FC = () => {
       />
 
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex flex-col sm:flex-row gap-4 flex-1">
-          <div className="flex-1 max-w-lg">
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onSearch={handleSearch}
-            />
+      <div 
+        className="p-6 rounded-2xl animate-slide-down"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 247, 237, 0.75) 100%)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(249, 115, 22, 0.05)'
+        }}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 flex-1">
+            <div className="flex-1 max-w-lg transform transition-all duration-300 hover:scale-[1.02]">
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSearch={handleSearch}
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={handleToggleDelivered}
-            className={`inline-flex items-center px-3 py-2.5 text-sm font-light rounded-xl transition-all duration-200 border-2 transform hover:scale-105 ${
-              showDeliveredToggle
-                ? 'bg-orange-50 border-orange-400 text-orange-700 shadow-sm'
-                : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400'
-            }`}
-          >
-            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-            <span>Ver entregados</span>
-            <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
-              showDeliveredToggle
-                ? 'bg-orange-100 text-orange-600'
-                : 'bg-gray-100 text-gray-500'
-            }`}>
-              {counts.delivered || 0}
-            </span>
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleToggleDelivered}
+              className={`inline-flex items-center px-3 py-2.5 text-sm font-light rounded-xl transition-all duration-300 border transform hover:scale-105 hover:shadow-sm ${
+                showDeliveredToggle
+                  ? 'bg-gradient-to-r from-orange-50 to-orange-100/70 border-orange-300/60 text-orange-700 shadow-sm'
+                  : 'bg-gradient-to-r from-white/80 to-gray-50/70 border-gray-300/60 text-gray-600 hover:from-gray-50 hover:to-gray-100/70 hover:border-gray-400/60'
+              }`}
+              style={{
+                backdropFilter: 'blur(8px)'
+              }}
+            >
+              <svg className="w-4 h-4 mr-2 transition-transform duration-200 hover:rotate-12" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span>Ver entregados</span>
+              <span className={`ml-2 px-2 py-0.5 text-xs rounded-full transition-all duration-200 ${
+                showDeliveredToggle
+                  ? 'bg-orange-200/60 text-orange-700'
+                  : 'bg-gray-200/60 text-gray-600'
+              }`}>
+                {counts.delivered || 0}
+              </span>
+            </button>
 
-          <button
-            onClick={handleExportCSV}
-            className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-stone-700 bg-white/90 backdrop-blur-xl border border-stone-200 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-stone-200 transition-all duration-200 shadow-sm transform hover:scale-105"
-          >
-            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Exportar CSV
-          </button>
+            <button
+              onClick={handleExportCSV}
+              className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-stone-700 border transition-all duration-300 shadow-sm transform hover:scale-105 hover:shadow-md group"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 247, 237, 0.8) 100%)',
+                backdropFilter: 'blur(12px)',
+                borderColor: 'rgba(255, 255, 255, 0.3)'
+              }}
+            >
+              <svg className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className="transition-colors duration-200 group-hover:text-stone-800">Exportar CSV</span>
+            </button>
 
-          <button
-            onClick={handleAddEncargo}
-            className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-200 transition-all duration-200 transform hover:scale-105 shadow-sm"
-          >
-            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Nuevo Encargo
-          </button>
+            <button
+              onClick={handleAddEncargo}
+              className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-white transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-lg group"
+              style={{
+                background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
+              }}
+            >
+              <svg className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span>Nuevo Encargo</span>
+            </button>
+          </div>
         </div>
       </div>
 

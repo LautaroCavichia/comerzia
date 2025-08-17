@@ -119,25 +119,48 @@ export const ClientsView: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+      <div 
+      className="space-y-6 animate-fade-in"
+      style={{
+        background: 'radial-gradient(ellipse at top, rgba(249, 115, 22, 0.02) 0%, transparent 50%)',
+        minHeight: '100vh',
+        paddingBottom: '2rem'
+      }}
+    >
+      <div 
+        className="p-6 rounded-2xl shadow-sm border animate-slide-down"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 247, 237, 0.8) 100%)',
+          backdropFilter: 'blur(20px)',
+          borderColor: 'rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(249, 115, 22, 0.05)'
+        }}
+      >
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-light text-stone-800">Clientes</h2>
+          <div className="animate-fade-in-delayed">
+            <h2 className="text-2xl font-light text-stone-800 flex items-center">
+              <svg className="w-6 h-6 mr-3 text-orange-500 animate-pulse-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Clientes
+            </h2>
             <p className="text-stone-600 font-light">Gestiona los perfiles de tus clientes</p>
           </div>
           <button
             onClick={() => setShowAddClient(true)}
-            className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-200 transition-all duration-200 transform hover:scale-105 shadow-sm space-x-2"
+            className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-white transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-lg space-x-2 group animate-fade-in-delayed"
+            style={{
+              background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+              boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
+            }}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+            <svg className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
             <span>Agregar Cliente</span>
           </button>
         </div>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Clients List */}
         <div className="lg:col-span-1">

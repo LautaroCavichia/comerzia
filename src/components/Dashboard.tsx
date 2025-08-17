@@ -168,18 +168,31 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+      <div 
+        className="p-6 rounded-2xl shadow-sm border animate-slide-down"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 247, 237, 0.8) 100%)',
+          backdropFilter: 'blur(20px)',
+          borderColor: 'rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(249, 115, 22, 0.05)'
+        }}
+      >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-light text-stone-800">Dashboard</h2>
+          <div className="animate-fade-in-delayed">
+            <h2 className="text-2xl font-light text-stone-800 flex items-center">
+              <svg className="w-6 h-6 mr-3 text-orange-500 animate-pulse-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Dashboard
+            </h2>
             <p className="text-stone-600 font-light">Análisis y métricas de tus encargos</p>
           </div>
           
-          <div className="mt-4 sm:mt-0">
+          <div className="mt-4 sm:mt-0 animate-fade-in-delayed">
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value as '6m' | '1y' | 'all')}
-              className="select-field"
+              className="select-field transition-all duration-200 hover:scale-105"
             >
               <option value="6m">Últimos 6 meses</option>
               <option value="1y">Último año</option>
@@ -188,7 +201,6 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200 hover:shadow-md transition-shadow duration-200">

@@ -135,7 +135,11 @@ export const EncargosView: React.FC = () => {
     const today = new Date();
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay());
+    // Calculate start of week (Monday) - getDay() returns 0 for Sunday, 1 for Monday, etc.
+    const dayOfWeek = today.getDay();
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 6 days back, others = dayOfWeek - 1
+    startOfWeek.setDate(today.getDate() - daysFromMonday);
+    startOfWeek.setHours(0, 0, 0, 0); // Set to start of day
 
     // First apply the selected filter
     let filteredData: Encargo[];
@@ -143,12 +147,14 @@ export const EncargosView: React.FC = () => {
       case 'today':
         filteredData = data.filter(e => {
           const orderDate = new Date(e.fecha);
+          orderDate.setHours(0, 0, 0, 0); // Normalize to start of day for comparison
           return orderDate >= startOfDay;
         });
         break;
       case 'thisWeek':
         filteredData = data.filter(e => {
           const orderDate = new Date(e.fecha);
+          orderDate.setHours(0, 0, 0, 0); // Normalize to start of day for comparison
           return orderDate >= startOfWeek;
         });
         break;

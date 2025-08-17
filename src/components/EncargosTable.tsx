@@ -232,22 +232,39 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
 
   if (encargos.length === 0) {
     return (
-      <div className="text-center py-12">
-        <svg
-          className="mx-auto h-12 w-12 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <h3 className="mt-2 text-sm font-medium text-gray-900">Sin encargos aún</h3>
-        <p className="mt-1 text-sm text-gray-500">Comience agregando un nuevo encargo.</p>
+      <div 
+        className="text-center py-16 rounded-2xl animate-fade-in"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 247, 237, 0.75) 100%)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04)'
+        }}
+      >
+        <div className="animate-float">
+          <svg
+            className="mx-auto h-16 w-16 text-orange-300 animate-pulse-soft"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        </div>
+        <h3 className="mt-6 text-lg font-semibold text-gray-800 animate-fade-in-delayed">Sin encargos aún</h3>
+        <div className="mt-6 animate-scale-in-delayed">
+          <div className="inline-flex items-center px-4 py-2 text-sm text-orange-600 bg-orange-50/50 rounded-xl border border-orange-100">
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            Utilice el botón "Nuevo Encargo" para comenzar
+          </div>
+        </div>
       </div>
     );
   }
@@ -255,14 +272,20 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
   return (
     <>
       {selectedItems.size > 0 && (
-        <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-center justify-between">
+        <div 
+          className="mb-4 p-4 bg-gradient-to-r from-orange-50/90 to-orange-100/70 border border-orange-200/60 rounded-2xl flex items-center justify-between backdrop-blur-sm shadow-sm transition-all duration-300 animate-slide-down"
+          style={{
+            boxShadow: '0 4px 20px rgba(249, 115, 22, 0.08), 0 2px 8px rgba(249, 115, 22, 0.04)'
+          }}
+        >
           <div className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse-soft"></div>
             <span className="text-sm font-medium text-orange-800">
               {selectedItems.size} elemento{selectedItems.size !== 1 ? 's' : ''} seleccionado{selectedItems.size !== 1 ? 's' : ''}
             </span>
             <button
               onClick={() => setSelectedItems(new Set())}
-              className="text-xs text-orange-600 hover:text-orange-800 underline"
+              className="text-xs text-orange-600 hover:text-orange-800 underline transition-colors duration-200 hover:scale-105 transform"
             >
               Desseleccionar todo
             </button>
@@ -270,7 +293,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleBulkDelete}
-              className="inline-flex items-center px-3 py-1.5 text-sm text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors"
+              className="inline-flex items-center px-3 py-1.5 text-sm text-red-700 bg-red-100/80 hover:bg-red-200/90 rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-sm backdrop-blur-sm"
             >
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -280,12 +303,26 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
           </div>
         </div>
       )}
-      <div className="card overflow-hidden">
+      <div 
+        className="card overflow-hidden transition-all duration-500 hover:shadow-lg"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 247, 237, 0.75) 100%)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(249, 115, 22, 0.05)'
+        }}
+      >
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-white/20">
-            <thead className="glass-badge sticky top-0 backdrop-blur-md z-10 bg-white/80">
-            <tr>
-              <th className="px-3 py-4 text-center w-12">
+          <table className="min-w-full divide-y divide-white/30">
+            <thead 
+              className="sticky top-0 backdrop-blur-xl z-10"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 247, 237, 0.9) 100%)',
+                borderBottom: '1px solid rgba(249, 115, 22, 0.1)'
+              }}
+            >
+            <tr className="animate-fade-in">
+              <th className="px-3 py-3 text-center w-12">
                 <input
                   type="checkbox"
                   checked={isAllSelected}
@@ -293,65 +330,104 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     if (input) input.indeterminate = isPartiallySelected;
                   }}
                   onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                  className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 transition-all duration-200 transform hover:scale-110"
                 />
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-24">
-                Fecha
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 tracking-wider group">
+                <div className="flex items-center space-x-1">
+                  <span className="transition-colors duration-200 group-hover:text-orange-600">Fecha</span>
+                  <svg className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity duration-200" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-32">
-                Producto
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 tracking-wider group">
+                <div className="flex items-center space-x-1">
+                  <span className="transition-colors duration-200 group-hover:text-orange-600">Producto</span>
+                  <svg className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity duration-200" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-28">
-                Laboratorio
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 tracking-wider group">
+                <div className="flex items-center space-x-1">
+                  <span className="transition-colors duration-200 group-hover:text-orange-600">Laboratorio</span>
+                  <svg className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity duration-200" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-24">
-                Almacén
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 tracking-wider group">
+                <div className="flex items-center space-x-1">
+                  <span className="transition-colors duration-200 group-hover:text-orange-600">Almacén</span>
+                  <svg className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity duration-200" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
               </th>
-              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider w-20">
-                Pedido
+              <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 tracking-wider">
+                <span className="transition-colors duration-200 hover:text-orange-600">Pedido</span>
               </th>
-              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider w-20">
-                Recibido
+              <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 tracking-wider">
+                <span className="transition-colors duration-200 hover:text-orange-600">Recibido</span>
               </th>
-              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider w-20">
-                Entregado
+              <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 tracking-wider">
+                <span className="transition-colors duration-200 hover:text-orange-600">Entregado</span>
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-28">
-                Persona
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 tracking-wider group">
+                <div className="flex items-center space-x-1">
+                  <span className="transition-colors duration-200 group-hover:text-orange-600">Persona</span>
+                  <svg className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity duration-200" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-28">
-                Teléfono
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 tracking-wider group">
+                <div className="flex items-center space-x-1">
+                  <span className="transition-colors duration-200 group-hover:text-orange-600">Teléfono</span>
+                  <svg className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity duration-200" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
               </th>
-              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider w-20">
-                Avisado
+              <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 tracking-wider">
+                <span className="transition-colors duration-200 hover:text-orange-600">Avisado</span>
               </th>
-              <th className="px-4 py-4 text-center text-xs font-semibold text-gray-600 tracking-wider w-24">
-                Pagado (€)
+              <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 tracking-wider">
+                <span className="transition-colors duration-200 hover:text-orange-600">Pagado (€)</span>
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 tracking-wider w-36">
-                Observaciones
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 tracking-wider group">
+                <div className="flex items-center space-x-1">
+                  <span className="transition-colors duration-200 group-hover:text-orange-600">Observaciones</span>
+                  <svg className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity duration-200" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
               </th>
-              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-600 tracking-wider w-20">
-                Acciones
+              <th className="px-3 py-3 text-right text-xs font-semibold text-gray-600 tracking-wider">
+                <span className="transition-colors duration-200 hover:text-orange-600">Acciones</span>
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/20">
-            {encargos.map((encargo) => (
+          <tbody className="divide-y divide-white/25">
+            {encargos.map((encargo, index) => (
               <tr
                 key={encargo.id}
-                className="table-row"
+                className="table-row group transition-all duration-300 hover:bg-gradient-to-r hover:from-white/70 hover:to-orange-50/30 hover:shadow-sm animate-fade-in"
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                  animationFillMode: 'both'
+                }}
               >
-                <td className="px-3 py-4 whitespace-nowrap text-center">
+                <td className="px-3 py-3 whitespace-nowrap text-center">
                   <input
                     type="checkbox"
                     checked={selectedItems.has(encargo.id)}
                     onChange={(e) => handleSelectItem(encargo.id, e.target.checked)}
-                    className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                    className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 transition-all duration-200 transform hover:scale-110"
                   />
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 whitespace-nowrap text-sm group-hover:scale-[1.01] transition-transform duration-200">
                   <EditableCell
                     value={encargo.fecha instanceof Date && !isNaN(encargo.fecha.getTime()) 
                       ? `${encargo.fecha.getFullYear()}-${String(encargo.fecha.getMonth() + 1).padStart(2, '0')}-${String(encargo.fecha.getDate()).padStart(2, '0')}`
@@ -371,72 +447,74 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                   />
                 </td>
                 
-                <td className="px-3 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 whitespace-nowrap text-sm group-hover:scale-[1.01] transition-transform duration-200">
                   <EditableCell
                     value={encargo.producto}
                     onSave={(value) => handleCellEdit(encargo.id, 'producto', value)}
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'producto'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'producto' })}
                     field="producto"
-                    maxWidth="8rem"
                   />
                 </td>
                 
-                <td className="px-3 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 whitespace-nowrap text-sm group-hover:scale-[1.01] transition-transform duration-200">
                   <EditableCell
                     value={encargo.laboratorio}
                     onSave={(value) => handleCellEdit(encargo.id, 'laboratorio', value)}
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'laboratorio'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'laboratorio' })}
                     field="laboratorio"
-                    maxWidth="7rem"
                   />
                 </td>
                 
-                <td className="px-3 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 whitespace-nowrap text-sm group-hover:scale-[1.01] transition-transform duration-200">
                   <EditableCell
                     value={encargo.almacen}
                     onSave={(value) => handleCellEdit(encargo.id, 'almacen', value)}
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'almacen'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'almacen' })}
                     field="almacen"
-                    maxWidth="6rem"
                   />
                 </td>
                 
-                <td className="px-3 py-4 whitespace-nowrap text-center">
-                  <ToggleCell
-                    value={encargo.pedido}
-                    onChange={(value) => handleWorkflowToggle(encargo, 'pedido', value)}
-                  />
+                <td className="px-3 py-3 whitespace-nowrap text-center">
+                  <div className="flex justify-center transform transition-transform duration-200 group-hover:scale-105">
+                    <ToggleCell
+                      value={encargo.pedido}
+                      onChange={(value) => handleWorkflowToggle(encargo, 'pedido', value)}
+                    />
+                  </div>
                 </td>
                 
-                <td className="px-3 py-4 whitespace-nowrap text-center">
-                  <ToggleCell
-                    value={encargo.recibido}
-                    onChange={(value) => handleWorkflowToggle(encargo, 'recibido', value)}
-                  />
+                <td className="px-3 py-3 whitespace-nowrap text-center">
+                  <div className="flex justify-center transform transition-transform duration-200 group-hover:scale-105">
+                    <ToggleCell
+                      value={encargo.recibido}
+                      onChange={(value) => handleWorkflowToggle(encargo, 'recibido', value)}
+                    />
+                  </div>
                 </td>
                 
-                <td className="px-3 py-4 whitespace-nowrap text-center">
-                  <ToggleCell
-                    value={encargo.entregado}
-                    onChange={(value) => handleWorkflowToggle(encargo, 'entregado', value)}
-                  />
+                <td className="px-3 py-3 whitespace-nowrap text-center">
+                  <div className="flex justify-center transform transition-transform duration-200 group-hover:scale-105">
+                    <ToggleCell
+                      value={encargo.entregado}
+                      onChange={(value) => handleWorkflowToggle(encargo, 'entregado', value)}
+                    />
+                  </div>
                 </td>
                 
-                <td className="px-3 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 whitespace-nowrap text-sm group-hover:scale-[1.01] transition-transform duration-200">
                   <EditableCell
                     value={encargo.persona}
                     onSave={(value) => handleCellEdit(encargo.id, 'persona', value)}
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'persona'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'persona' })}
                     field="persona"
-                    maxWidth="7rem"
                   />
                 </td>
                 
-                <td className="px-3 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 whitespace-nowrap text-sm group-hover:scale-[1.01] transition-transform duration-200">
                   <EditableCell
                     value={encargo.telefono}
                     onSave={(value) => handleCellEdit(encargo.id, 'telefono', value)}
@@ -444,18 +522,19 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'telefono' })}
                     type="tel"
                     field="telefono"
-                    maxWidth="7rem"
                   />
                 </td>
                 
-                <td className="px-3 py-4 whitespace-nowrap text-center">
-                  <ToggleCell
-                    value={encargo.avisado}
-                    onChange={(value) => handleCellEdit(encargo.id, 'avisado', value)}
-                  />
+                <td className="px-3 py-3 whitespace-nowrap text-center">
+                  <div className="flex justify-center transform transition-transform duration-200 group-hover:scale-105">
+                    <ToggleCell
+                      value={encargo.avisado}
+                      onChange={(value) => handleCellEdit(encargo.id, 'avisado', value)}
+                    />
+                  </div>
                 </td>
                 
-                <td className="px-3 py-4 whitespace-nowrap text-center">
+                <td className="px-3 py-3 whitespace-nowrap text-center group-hover:scale-[1.01] transition-transform duration-200">
                   <EditableCell
                     value={encargo.pagado.toString()}
                     onSave={(value) => {
@@ -471,7 +550,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                   />
                 </td>
                 
-                <td className="px-3 py-4 text-sm max-w-xs">
+                <td className="px-3 py-3 text-sm group-hover:scale-[1.01] transition-transform duration-200">
                   <EditableCell
                     value={encargo.observaciones || ''}
                     onSave={(value) => handleCellEdit(encargo.id, 'observaciones', value)}
@@ -479,17 +558,16 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'observaciones' })}
                     multiline
                     field="observaciones"
-                    maxWidth="9rem"
                   />
                 </td>
                 
-                <td className="px-3 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-3 py-3 whitespace-nowrap text-right text-sm font-medium">
                   <button
                     onClick={() => handleDelete(encargo.id)}
-                    className="text-red-600 hover:text-red-700 transition-all duration-200 ease-smooth hover:scale-110"
+                    className="text-red-500 hover:text-red-600 transition-all duration-300 transform hover:scale-125 hover:rotate-6 p-1 rounded-lg hover:bg-red-50/50 group/delete"
                     title="Eliminar encargo"
                   >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 transition-all duration-200 group-hover/delete:drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"

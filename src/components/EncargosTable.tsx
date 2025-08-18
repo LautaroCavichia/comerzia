@@ -434,11 +434,13 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                       : `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
                     }
                     onSave={(value) => {
-                      // Parse date as local date, not UTC
-                      const [year, month, day] = value.split('-').map(Number);
-                      const date = new Date(year, month - 1, day);
-                      if (!isNaN(date.getTime())) {
-                        handleCellEdit(encargo.id, 'fecha', date);
+                      if (value) {
+                        // Parse date as local date, not UTC
+                        const [year, month, day] = value.split('-').map(Number);
+                        const date = new Date(year, month - 1, day);
+                        if (!isNaN(date.getTime())) {
+                          handleCellEdit(encargo.id, 'fecha', date);
+                        }
                       }
                     }}
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'fecha'}
@@ -538,9 +540,13 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                   <EditableCell
                     value={encargo.pagado.toString()}
                     onSave={(value) => {
-                      const numValue = parseFloat(value);
-                      if (!isNaN(numValue) && numValue >= 0) {
-                        handleCellEdit(encargo.id, 'pagado', numValue);
+                      if (value) {
+                        const numValue = parseFloat(value);
+                        if (!isNaN(numValue) && numValue >= 0) {
+                          handleCellEdit(encargo.id, 'pagado', numValue);
+                        }
+                      } else {
+                        handleCellEdit(encargo.id, 'pagado', 0);
                       }
                     }}
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'pagado'}

@@ -244,7 +244,7 @@ export class DatabaseService {
 
   async createPersonaWithNotifications(data: {
     nombre: string;
-    telefono: string;
+    telefono: string | null;
     email?: string;
     phone_notifications: boolean;
     email_notifications: boolean;
@@ -355,7 +355,7 @@ export class DatabaseService {
     }
   }
 
-  async updatePersonaPhone(id: string, newPhone: string): Promise<void> {
+  async updatePersonaPhone(id: string, newPhone: string | null): Promise<void> {
     await sql`BEGIN`;
     try {
       const oldPersona = await sql`
@@ -387,11 +387,20 @@ export class DatabaseService {
       `;
 
       // Update all related encargos with the new phone
-      await sql`
-        UPDATE encargos 
-        SET telefono = ${newPhone}, updated_at = NOW()
-        WHERE telefono = ${oldPhone} AND selling_point = ${this.sellingPoint}
-      `;
+      // Handle NULL values properly
+      if (oldPhone === null) {
+        await sql`
+          UPDATE encargos 
+          SET telefono = ${newPhone}, updated_at = NOW()
+          WHERE telefono IS NULL AND selling_point = ${this.sellingPoint}
+        `;
+      } else {
+        await sql`
+          UPDATE encargos 
+          SET telefono = ${newPhone}, updated_at = NOW()
+          WHERE telefono = ${oldPhone} AND selling_point = ${this.sellingPoint}
+        `;
+      }
 
       await sql`COMMIT`;
     } catch (error) {
@@ -453,11 +462,20 @@ export class DatabaseService {
 
       // Update related encargos if phone changed
       if (data.telefono && data.telefono !== oldPhone) {
-        await sql`
-          UPDATE encargos 
-          SET telefono = ${data.telefono}, updated_at = NOW()
-          WHERE telefono = ${oldPhone} AND selling_point = ${this.sellingPoint}
-        `;
+        // Handle NULL values properly
+        if (oldPhone === null) {
+          await sql`
+            UPDATE encargos 
+            SET telefono = ${data.telefono}, updated_at = NOW()
+            WHERE telefono IS NULL AND selling_point = ${this.sellingPoint}
+          `;
+        } else {
+          await sql`
+            UPDATE encargos 
+            SET telefono = ${data.telefono}, updated_at = NOW()
+            WHERE telefono = ${oldPhone} AND selling_point = ${this.sellingPoint}
+          `;
+        }
       }
 
       await sql`COMMIT`;
@@ -648,29 +666,41 @@ export class DatabaseService {
   }
 
   // Find persona by phone or name with better matching
-  async findPersonaByContact(telefono: string, nombre?: string): Promise<Persona | null> {
+  async findPersonaByContact(telefono: string | null, nombre?: string): Promise<Persona | null> {
     let result;
     
     if (nombre) {
       // Try exact match on both phone and name first
-      result = await sql`
-        SELECT * FROM personas 
-        WHERE selling_point = ${this.sellingPoint} 
-        AND (telefono = ${telefono} OR nombre = ${nombre})
-        ORDER BY 
-          CASE WHEN telefono = ${telefono} AND nombre = ${nombre} THEN 1
-               WHEN telefono = ${telefono} THEN 2
-               WHEN nombre = ${nombre} THEN 3
-               ELSE 4 END
-        LIMIT 1
-      `;
-    } else {
+      if (telefono) {
+        result = await sql`
+          SELECT * FROM personas 
+          WHERE selling_point = ${this.sellingPoint} 
+          AND (telefono = ${telefono} OR nombre = ${nombre})
+          ORDER BY 
+            CASE WHEN telefono = ${telefono} AND nombre = ${nombre} THEN 1
+                 WHEN telefono = ${telefono} THEN 2
+                 WHEN nombre = ${nombre} THEN 3
+                 ELSE 4 END
+          LIMIT 1
+        `;
+      } else {
+        // Only search by name if telefono is null
+        result = await sql`
+          SELECT * FROM personas 
+          WHERE nombre = ${nombre} AND selling_point = ${this.sellingPoint}
+          LIMIT 1
+        `;
+      }
+    } else if (telefono) {
       // Phone only search
       result = await sql`
         SELECT * FROM personas 
         WHERE telefono = ${telefono} AND selling_point = ${this.sellingPoint}
         LIMIT 1
       `;
+    } else {
+      // No telefono and no nombre, can't search
+      return null;
     }
 
     if (result.length === 0) return null;
@@ -801,26 +831,35 @@ export class DatabaseService {
 
       const current = currentEncargo[0];
       
-      // Check if persona or telefono are being updated
-      const isPersonaUpdate = encargo.persona && encargo.persona !== current.persona;
-      const isTelefonoUpdate = encargo.telefono && encargo.telefono !== current.telefono;
+      // Check if persona or telefono are being updated (handle null values correctly)
+      const isPersonaUpdate = encargo.hasOwnProperty('persona') && encargo.persona !== current.persona;
+      const isTelefonoUpdate = encargo.hasOwnProperty('telefono') && encargo.telefono !== current.telefono;
 
       if (isPersonaUpdate || isTelefonoUpdate) {
-        // Find the persona record that matches current telefono
-        const personaRecord = await sql`
-          SELECT * FROM personas 
-          WHERE telefono = ${current.telefono} AND selling_point = ${this.sellingPoint}
-          LIMIT 1
-        `;
+        // Find the persona record that matches current telefono (handle NULL properly)
+        let personaRecord;
+        if (current.telefono === null) {
+          personaRecord = await sql`
+            SELECT * FROM personas 
+            WHERE telefono IS NULL AND nombre = ${current.persona} AND selling_point = ${this.sellingPoint}
+            LIMIT 1
+          `;
+        } else {
+          personaRecord = await sql`
+            SELECT * FROM personas 
+            WHERE telefono = ${current.telefono} AND selling_point = ${this.sellingPoint}
+            LIMIT 1
+          `;
+        }
 
         if (personaRecord.length > 0) {
           const persona = personaRecord[0];
           
           // Check if telefono is being updated to a different existing persona
-          if (isTelefonoUpdate) {
+          if (isTelefonoUpdate && encargo.telefono !== null) {
             const existingPersona = await sql`
               SELECT id FROM personas 
-              WHERE telefono = ${encargo.telefono} AND selling_point = ${this.sellingPoint}
+              WHERE telefono = ${encargo.telefono} AND selling_point = ${this.sellingPoint} AND id != ${persona.id}
             `;
             
             if (existingPersona.length > 0) {
@@ -837,18 +876,26 @@ export class DatabaseService {
             UPDATE personas 
             SET 
               nombre = COALESCE(${updateData.nombre}, nombre),
-              telefono = COALESCE(${updateData.telefono}, telefono),
+              telefono = ${isTelefonoUpdate ? encargo.telefono : sql`telefono`},
               updated_at = NOW()
             WHERE id = ${persona.id} AND selling_point = ${this.sellingPoint}
           `;
 
-          // If telefono changed, update all related encargos
+          // If telefono changed, update all related encargos (handle NULL properly)
           if (isTelefonoUpdate) {
-            await sql`
-              UPDATE encargos 
-              SET telefono = ${encargo.telefono}, updated_at = NOW()
-              WHERE telefono = ${current.telefono} AND selling_point = ${this.sellingPoint}
-            `;
+            if (current.telefono === null) {
+              await sql`
+                UPDATE encargos 
+                SET telefono = ${encargo.telefono}, updated_at = NOW()
+                WHERE telefono IS NULL AND persona = ${current.persona} AND selling_point = ${this.sellingPoint}
+              `;
+            } else {
+              await sql`
+                UPDATE encargos 
+                SET telefono = ${encargo.telefono}, updated_at = NOW()
+                WHERE telefono = ${current.telefono} AND selling_point = ${this.sellingPoint}
+              `;
+            }
           }
 
           // If persona name changed, update all related encargos
@@ -859,15 +906,27 @@ export class DatabaseService {
               WHERE persona = ${current.persona} AND selling_point = ${this.sellingPoint}
             `;
           }
-        } else if (isPersonaUpdate || isTelefonoUpdate) {
-          // No existing persona found, create one if we have both name and phone
+        } else {
+          // No existing persona found, create one 
           const newPersonaName = encargo.persona || current.persona;
-          const newPersonaTelefono = encargo.telefono || current.telefono;
+          const newPersonaTelefono = isTelefonoUpdate ? encargo.telefono : current.telefono;
           
-          if (newPersonaName && newPersonaTelefono) {
+          if (newPersonaName) {
+            // Check if a persona with this phone already exists (only if phone is not null)
+            if (newPersonaTelefono !== null) {
+              const existingPersona = await sql`
+                SELECT id FROM personas 
+                WHERE telefono = ${newPersonaTelefono} AND selling_point = ${this.sellingPoint}
+              `;
+              
+              if (existingPersona.length > 0) {
+                throw new Error('Cannot create persona: phone number already exists');
+              }
+            }
+            
             await sql`
-              INSERT INTO personas (nombre, telefono, selling_point)
-              VALUES (${newPersonaName}, ${newPersonaTelefono}, ${this.sellingPoint})
+              INSERT INTO personas (nombre, telefono, selling_point, phone_notifications, email_notifications)
+              VALUES (${newPersonaName}, ${newPersonaTelefono}, ${this.sellingPoint}, false, false)
             `;
           }
         }

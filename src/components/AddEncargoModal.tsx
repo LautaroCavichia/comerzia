@@ -12,13 +12,13 @@ import "react-datepicker/dist/react-datepicker.css";
 const encargoSchema = z.object({
   fecha: z.date(),
   producto: z.string().min(1, 'El producto es requerido'),
-  laboratorio: z.string().min(1, 'El laboratorio es requerido'),
-  almacen: z.string().min(1, 'El almacén es requerido'),
+  laboratorio: z.string().optional(),
+  almacen: z.string().optional(),
   pedido: z.boolean(),
   recibido: z.boolean(),
   entregado: z.boolean(),
   persona: z.string().min(1, 'La persona es requerida'),
-  telefono: z.string().min(1, 'El teléfono es requerido'),
+  telefono: z.string().optional(),
   email: z.string().optional(),
   phone_notifications: z.boolean(),
   email_notifications: z.boolean(),
@@ -103,7 +103,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
     if (watchedPersona) {
       const persona = personas.find(p => p.nombre === watchedPersona);
       if (persona) {
-        setValue('telefono', persona.telefono);
+        setValue('telefono', persona.telefono || '');
         setValue('email', persona.email || '');
         setValue('phone_notifications', persona.phone_notifications || false);
         setValue('email_notifications', persona.email_notifications || false);
@@ -126,14 +126,14 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
   const onSubmit = async (data: EncargoFormData) => {
     setLoading(true);
     try {
-      // Sanitize all text inputs
+      // Sanitize all text inputs and convert empty strings to null
       const sanitizedData = {
         ...data,
         producto: sanitizeInput(data.producto),
-        laboratorio: sanitizeInput(data.laboratorio),
-        almacen: sanitizeInput(data.almacen),
+        laboratorio: data.laboratorio && data.laboratorio.trim() ? sanitizeInput(data.laboratorio) : null,
+        almacen: data.almacen && data.almacen.trim() ? sanitizeInput(data.almacen) : null,
         persona: sanitizeInput(data.persona),
-        telefono: sanitizeInput(data.telefono),
+        telefono: data.telefono && data.telefono.trim() ? sanitizeInput(data.telefono) : null,
         observaciones: data.observaciones ? sanitizeInput(data.observaciones) : undefined
       };
 
@@ -146,7 +146,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
         return;
       }
 
-      const normalizedPhone = normalizePhoneNumber(sanitizedData.telefono);
+      const normalizedPhone = sanitizedData.telefono ? normalizePhoneNumber(sanitizedData.telefono) : null;
       
       // Check for potential duplicates
       const existingOrders = await db.getEncargos();
@@ -215,14 +215,18 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
         await db.createProducto(sanitizedData.producto);
       }
 
-      const existingLaboratorio = laboratorios.find(l => l.nombre === sanitizedData.laboratorio);
-      if (!existingLaboratorio) {
-        await db.createLaboratorio(sanitizedData.laboratorio);
+      if (sanitizedData.laboratorio) {
+        const existingLaboratorio = laboratorios.find(l => l.nombre === sanitizedData.laboratorio);
+        if (!existingLaboratorio) {
+          await db.createLaboratorio(sanitizedData.laboratorio);
+        }
       }
 
-      const existingAlmacen = almacenes.find(a => a.nombre === sanitizedData.almacen);
-      if (!existingAlmacen) {
-        await db.createAlmacen(sanitizedData.almacen);
+      if (sanitizedData.almacen) {
+        const existingAlmacen = almacenes.find(a => a.nombre === sanitizedData.almacen);
+        if (!existingAlmacen) {
+          await db.createAlmacen(sanitizedData.almacen);
+        }
       }
       
       await db.createEncargo({
@@ -256,14 +260,13 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
         setLaboratorios(laboratorios);
         setValue('laboratorio', name);
       } else if (type === 'persona') {
-        const telefono = prompt('Ingrese el teléfono:');
-        if (!telefono) return;
+        const telefono = prompt('Ingrese el teléfono (opcional):');
         
         const email = prompt('Ingrese el email (opcional):');
         const phoneNotifications = false; // Phone notifications disabled (coming soon)
         const emailNotifications = !!email && window.confirm('¿Activar notificaciones por email?');
         
-        const normalizedPhone = normalizePhoneNumber(telefono);
+        const normalizedPhone = telefono ? normalizePhoneNumber(telefono) : null;
         await db.createPersonaWithNotifications({
           nombre: name,
           telefono: normalizedPhone,
@@ -274,7 +277,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
         const personas = await db.getPersonas();
         setPersonas(personas);
         setValue('persona', name);
-        setValue('telefono', normalizedPhone);
+        setValue('telefono', normalizedPhone || '');
         setValue('email', email || '');
         setValue('phone_notifications', phoneNotifications);
         setValue('email_notifications', emailNotifications);
@@ -375,71 +378,8 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 </div>
               </div>
 
-              {/* Lab and Storage Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm font-light text-stone-700">
-                    <span className="text-red-500 mr-1">*</span>
-                    Laboratorio
-                  </label>
-                  <div className="relative">
-                    <input
-                      {...register('laboratorio')}
-                      list="laboratorios"
-                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all text-sm font-light backdrop-blur-sm"
-                      placeholder="Escribir o seleccionar laboratorio"
-                    />
-                    <datalist id="laboratorios">
-                      {laboratorios.map(laboratorio => (
-                        <option key={laboratorio.id} value={laboratorio.nombre} />
-                      ))}
-                    </datalist>
-                    <button
-                      type="button"
-                      onClick={() => handleNewItem('laboratorio')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-light text-orange-600 hover:text-orange-700 hover:bg-orange-50/80 rounded-lg transition-colors"
-                    >
-                      + Nuevo
-                    </button>
-                  </div>
-                  {errors.laboratorio && (
-                    <p className="text-xs text-red-500">{errors.laboratorio.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm font-light text-stone-700">
-                    <span className="text-red-500 mr-1">*</span>
-                    Almacén
-                  </label>
-                  <div className="relative">
-                    <input
-                      {...register('almacen')}
-                      list="almacenes"
-                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all text-sm font-light backdrop-blur-sm"
-                      placeholder="Escribir o seleccionar almacén"
-                    />
-                    <datalist id="almacenes">
-                      {almacenes.map(almacen => (
-                        <option key={almacen.id} value={almacen.nombre} />
-                      ))}
-                    </datalist>
-                    <button
-                      type="button"
-                      onClick={() => handleNewItem('almacen')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-light text-orange-600 hover:text-orange-700 hover:bg-orange-50/80 rounded-lg transition-colors"
-                    >
-                      + Nuevo
-                    </button>
-                  </div>
-                  {errors.almacen && (
-                    <p className="text-xs text-red-500">{errors.almacen.message}</p>
-                  )}
-                </div>
-              </div>
-
               {/* Contact Info Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
                 <div className="space-y-2">
                   <label className="flex items-center text-sm font-light text-stone-700">
                     <span className="text-red-500 mr-1">*</span>
@@ -469,22 +409,6 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                     <p className="text-xs text-red-500">{errors.persona.message}</p>
                   )}
                 </div>
-
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm font-light text-stone-700">
-                    <span className="text-red-500 mr-1">*</span>
-                    Teléfono
-                  </label>
-                  <input
-                    {...register('telefono')}
-                    type="tel"
-                    placeholder="+34 612 345 678"
-                    className="w-full px-4 py-3.5 bg-white/70 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all text-sm font-light backdrop-blur-sm"
-                  />
-                  {errors.telefono && (
-                    <p className="text-xs text-red-500">{errors.telefono.message}</p>
-                  )}
-                </div>
               </div>
             </div>
 
@@ -495,6 +419,85 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 <h3 className="text-lg font-light text-stone-800">Campos Opcionales</h3>
               </div>
               
+              {/* Telefono, Lab and Storage Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-light text-stone-700">
+                    <span className="text-blue-500 mr-1">○</span>
+                    Teléfono
+                  </label>
+                  <input
+                    {...register('telefono')}
+                    type="tel"
+                    placeholder="+34 612 345 678"
+                    className="w-full px-4 py-3.5 bg-white/70 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all text-sm font-light backdrop-blur-sm"
+                  />
+                  {errors.telefono && (
+                    <p className="text-xs text-red-500">{errors.telefono.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-light text-stone-700">
+                    <span className="text-blue-500 mr-1">○</span>
+                    Laboratorio
+                  </label>
+                  <div className="relative">
+                    <input
+                      {...register('laboratorio')}
+                      list="laboratorios"
+                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all text-sm font-light backdrop-blur-sm"
+                      placeholder="Seleccionar laboratorio"
+                    />
+                    <datalist id="laboratorios">
+                      {laboratorios.map(laboratorio => (
+                        <option key={laboratorio.id} value={laboratorio.nombre} />
+                      ))}
+                    </datalist>
+                    <button
+                      type="button"
+                      onClick={() => handleNewItem('laboratorio')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-light text-orange-600 hover:text-orange-700 hover:bg-orange-50/80 rounded-lg transition-colors"
+                    >
+                      + Nuevo
+                    </button>
+                  </div>
+                  {errors.laboratorio && (
+                    <p className="text-xs text-red-500">{errors.laboratorio.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-light text-stone-700">
+                    <span className="text-blue-500 mr-1">○</span>
+                    Almacén
+                  </label>
+                  <div className="relative">
+                    <input
+                      {...register('almacen')}
+                      list="almacenes"
+                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all text-sm font-light backdrop-blur-sm"
+                      placeholder="Seleccionar almacén"
+                    />
+                    <datalist id="almacenes">
+                      {almacenes.map(almacen => (
+                        <option key={almacen.id} value={almacen.nombre} />
+                      ))}
+                    </datalist>
+                    <button
+                      type="button"
+                      onClick={() => handleNewItem('almacen')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-light text-orange-600 hover:text-orange-700 hover:bg-orange-50/80 rounded-lg transition-colors"
+                    >
+                      + Nuevo
+                    </button>
+                  </div>
+                  {errors.almacen && (
+                    <p className="text-xs text-red-500">{errors.almacen.message}</p>
+                  )}
+                </div>
+              </div>
+
               {/* Email and Payment Row */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div className="space-y-2">

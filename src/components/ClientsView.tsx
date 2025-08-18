@@ -8,7 +8,7 @@ interface ClientProfile extends Persona {
     id: string;
     fecha: Date;
     producto: string;
-    laboratorio: string;
+    laboratorio: string | null;
     entregado: boolean;
     pagado: number;
   }>;
@@ -184,7 +184,7 @@ export const ClientsView: React.FC = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h4 className="font-light text-stone-800">{client.nombre}</h4>
-                        <p className="text-sm text-stone-600 font-light">{client.telefono}</p>
+                        <p className="text-sm text-stone-600 font-light">{client.telefono || 'Sin teléfono'}</p>
                         {client.email && (
                           <p className="text-sm text-stone-600 font-light">{client.email}</p>
                         )}
@@ -256,7 +256,7 @@ const ClientDetailPanel: React.FC<ClientDetailPanelProps> = ({
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(client.nombre);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
-  const [phoneValue, setPhoneValue] = useState(client.telefono);
+  const [phoneValue, setPhoneValue] = useState(client.telefono || '');
 
   const { db } = useDatabase();
   
@@ -303,13 +303,22 @@ const ClientDetailPanel: React.FC<ClientDetailPanelProps> = ({
   };
 
   const handlePhoneUpdate = async () => {
-    if (!phoneValue.trim()) {
-      alert('El teléfono no puede estar vacío');
+    const trimmedPhone = phoneValue.trim();
+    if (!trimmedPhone) {
+      // Allow empty phone numbers now
+      try {
+        await db.updatePersonaPhone(client.id, null);
+        setIsEditingPhone(false);
+        window.location.reload();
+      } catch (error) {
+        console.error('Error updating phone:', error);
+        alert('Error al actualizar el teléfono: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+      }
       return;
     }
     
     try {
-      await db.updatePersonaPhone(client.id, phoneValue.trim());
+      await db.updatePersonaPhone(client.id, trimmedPhone);
       setIsEditingPhone(false);
       window.location.reload(); // Reload to show cascade updates
     } catch (error) {
@@ -319,7 +328,7 @@ const ClientDetailPanel: React.FC<ClientDetailPanelProps> = ({
   };
 
   const handleCancelPhoneEdit = () => {
-    setPhoneValue(client.telefono);
+    setPhoneValue(client.telefono || '');
     setIsEditingPhone(false);
   };
 
@@ -414,7 +423,7 @@ const ClientDetailPanel: React.FC<ClientDetailPanelProps> = ({
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2 flex-1">
-                    <span className="text-gray-600">{client.telefono}</span>
+                    <span className="text-gray-600">{client.telefono || 'Sin teléfono'}</span>
                     <button
                       onClick={() => setIsEditingPhone(true)}
                       className="text-gray-400 hover:text-primary-600 p-1"

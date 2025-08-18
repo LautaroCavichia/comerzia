@@ -2,13 +2,13 @@ export interface Encargo {
   id: string;
   fecha: Date;
   producto: string;
-  laboratorio: string;
-  almacen: string;
+  laboratorio: string | null;
+  almacen: string | null;
   pedido: boolean;
   recibido: boolean;
   entregado: boolean;
   persona: string;
-  telefono: string;
+  telefono: string | null;
   avisado: boolean;
   pagado: number;
   observaciones?: string;
@@ -20,7 +20,7 @@ export interface Encargo {
 export interface Persona {
   id: string;
   nombre: string;
-  telefono: string;
+  telefono: string | null;
   email?: string;
   phone_notifications: boolean;
   email_notifications: boolean;

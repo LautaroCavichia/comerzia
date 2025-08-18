@@ -9,15 +9,15 @@ export interface FormValidationResult {
 }
 
 // Phone number validation
-export const validatePhone = (phone: string): ValidationResult => {
+export const validatePhone = (phone: string | null, required: boolean = false): ValidationResult => {
   if (!phone || phone.trim().length === 0) {
-    return { isValid: false, error: 'El teléfono es obligatorio' };
+    if (required) {
+      return { isValid: false, error: 'El teléfono es obligatorio' };
+    }
+    return { isValid: true };
   }
 
   const trimmedPhone = phone.trim();
-  
-  // Basic format validation - allow various international formats
-  const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
   
   if (trimmedPhone.length < 6) {
     return { isValid: false, error: 'El teléfono debe tener al menos 6 dígitos' };
@@ -138,7 +138,7 @@ export const validateText = (text: string, fieldName: string, required: boolean 
 // Persona form validation
 export const validatePersonaForm = (data: {
   nombre: string;
-  telefono: string;
+  telefono: string | null;
   email?: string;
 }): FormValidationResult => {
   const errors: Record<string, string> = {};
@@ -148,7 +148,7 @@ export const validatePersonaForm = (data: {
     errors.nombre = nameValidation.error!;
   }
 
-  const phoneValidation = validatePhone(data.telefono);
+  const phoneValidation = validatePhone(data.telefono, false);
   if (!phoneValidation.isValid) {
     errors.telefono = phoneValidation.error!;
   }
@@ -170,10 +170,10 @@ export const validatePersonaForm = (data: {
 export const validateEncargoForm = (data: {
   fecha: string | Date;
   producto: string;
-  laboratorio: string;
-  almacen: string;
+  laboratorio: string | null;
+  almacen: string | null;
   persona: string;
-  telefono: string;
+  telefono: string | null;
   pagado: string | number;
   observaciones?: string;
 }): FormValidationResult => {
@@ -189,14 +189,18 @@ export const validateEncargoForm = (data: {
     errors.producto = productoValidation.error!;
   }
 
-  const laboratorioValidation = validateText(data.laboratorio, 'Laboratorio', true, 255);
-  if (!laboratorioValidation.isValid) {
-    errors.laboratorio = laboratorioValidation.error!;
+  if (data.laboratorio) {
+    const laboratorioValidation = validateText(data.laboratorio, 'Laboratorio', false, 255);
+    if (!laboratorioValidation.isValid) {
+      errors.laboratorio = laboratorioValidation.error!;
+    }
   }
 
-  const almacenValidation = validateText(data.almacen, 'Almacén', true, 255);
-  if (!almacenValidation.isValid) {
-    errors.almacen = almacenValidation.error!;
+  if (data.almacen) {
+    const almacenValidation = validateText(data.almacen, 'Almacén', false, 255);
+    if (!almacenValidation.isValid) {
+      errors.almacen = almacenValidation.error!;
+    }
   }
 
   const personaValidation = validateName(data.persona);
@@ -204,7 +208,7 @@ export const validateEncargoForm = (data: {
     errors.persona = personaValidation.error!;
   }
 
-  const phoneValidation = validatePhone(data.telefono);
+  const phoneValidation = validatePhone(data.telefono, false);
   if (!phoneValidation.isValid) {
     errors.telefono = phoneValidation.error!;
   }
@@ -236,11 +240,11 @@ export const sanitizeInput = (input: string): string => {
 
 // Check for potential duplicate orders
 export const checkPotentialDuplicate = (
-  newOrder: { fecha: Date; producto: string; persona: string; telefono: string },
-  existingOrders: Array<{ fecha: Date; producto: string; persona: string; telefono: string }>
+  newOrder: { fecha: Date; producto: string; persona: string; telefono: string | null },
+  existingOrders: Array<{ fecha: Date; producto: string; persona: string; telefono: string | null }>
 ): boolean => {
   return existingOrders.some(order => {
-    const samePerson = order.persona === newOrder.persona || order.telefono === newOrder.telefono;
+    const samePerson = order.persona === newOrder.persona || (order.telefono && newOrder.telefono && order.telefono === newOrder.telefono);
     const sameProduct = order.producto === newOrder.producto;
     const sameDate = order.fecha.toDateString() === newOrder.fecha.toDateString();
     

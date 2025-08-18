@@ -20,7 +20,7 @@ interface ProductStat {
 
 interface CustomerStat {
   name: string;
-  phone: string;
+  phone: string | null;
   orderCount: number;
   lastOrder: Date;
 }
@@ -352,7 +352,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="font-light text-stone-800">{customer.name}</p>
-                    <p className="text-sm text-stone-600 font-light">{customer.phone}</p>
+                    <p className="text-sm text-stone-600 font-light">{customer.phone || 'Sin teléfono'}</p>
                   </div>
                 </div>
                 <div className="text-right">

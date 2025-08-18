@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { validateName, validatePhone, validateAmount, validateText, sanitizeInput } from '../lib/validation';
 
 interface EditableCellProps {
-  value: string;
-  onSave: (value: string) => void;
+  value: string | null;
+  onSave: (value: string | null) => void;
   isEditing: boolean;
   onEdit: () => void;
   type?: 'text' | 'date' | 'tel' | 'number';
@@ -22,7 +22,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   field,
   maxWidth
 }) => {
-  const [editValue, setEditValue] = useState(value);
+  const [editValue, setEditValue] = useState(value || '');
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
@@ -36,7 +36,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   }, [isEditing, type]);
 
   useEffect(() => {
-    setEditValue(value);
+    setEditValue(value || '');
   }, [value]);
 
   const formatDateForInput = (val: string) => {
@@ -96,8 +96,9 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 
   const handleSave = () => {
     const trimmedValue = editValue.trim();
+    const currentValue = value || '';
     
-    if (trimmedValue === value.trim()) {
+    if (trimmedValue === currentValue.trim()) {
       setError(null);
       return; // No change
     }
@@ -110,11 +111,12 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     }
 
     setError(null);
-    onSave(sanitizeInput(trimmedValue));
+    const finalValue = trimmedValue ? sanitizeInput(trimmedValue) : null;
+    onSave(finalValue);
   };
 
   const handleCancel = () => {
-    setEditValue(value);
+    setEditValue(value || '');
   };
 
   const formatValue = (val: string) => {

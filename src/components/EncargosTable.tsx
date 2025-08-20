@@ -394,7 +394,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                 <span className="transition-colors duration-200 hover:text-orange-600">Avisado</span>
               </th>
               <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 tracking-wider">
-                <span className="transition-colors duration-200 hover:text-orange-600">Pagado (€)</span>
+                <span className="transition-colors duration-200 hover:text-orange-600">Señal (€)</span>
               </th>
               <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 tracking-wider group">
                 <div className="flex items-center space-x-1">
@@ -456,6 +456,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'producto'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'producto' })}
                     field="producto"
+                    maxWidth="13rem"
                   />
                 </td>
                 
@@ -466,6 +467,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     isEditing={editingCell?.id === encargo.id && editingCell?.field === 'laboratorio'}
                     onEdit={() => setEditingCell({ id: encargo.id, field: 'laboratorio' })}
                     field="laboratorio"
+                    maxWidth="120px"
                   />
                 </td>
                 

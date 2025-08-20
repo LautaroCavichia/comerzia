@@ -507,7 +507,7 @@ const ClientDetailPanel: React.FC<ClientDetailPanelProps> = ({
             <div className="text-2xl font-bold text-green-600">{completedOrders}</div>
             <div className="text-sm text-gray-600">Completados</div>
           </div>
-          <div className="text-center p-4 bg-blue-50 rounded-xl">
+          <div className="text-center p-4 bg-blue-50 rounded-xl hidden">
             <div className="text-2xl font-bold text-blue-600">${totalSpent.toFixed(2)}</div>
             <div className="text-sm text-gray-600">Total Gastado</div>
           </div>

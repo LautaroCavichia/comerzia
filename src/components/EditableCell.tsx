@@ -24,7 +24,10 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 }) => {
   const [editValue, setEditValue] = useState(value || '');
   const [error, setError] = useState<string | null>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -38,6 +41,16 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   useEffect(() => {
     setEditValue(value || '');
   }, [value]);
+
+  useEffect(() => {
+    if (textRef.current && maxWidth && value) {
+      const element = textRef.current;
+      setIsTruncated(element.scrollWidth > element.clientWidth);
+    } else {
+      setIsTruncated(false);
+    }
+  }, [value, maxWidth]);
+
 
   const formatDateForInput = (val: string) => {
     if (type === 'date' && val) {
@@ -183,7 +196,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
         type={type}
         step={type === 'number' ? '0.01' : undefined}
         min={type === 'number' ? '0' : undefined}
-        placeholder={type === 'tel' ? '+34...' : type === 'number' ? '0.00' : ''}
+        placeholder={type === 'tel' ? '612...' : type === 'number' ? '0.00' : ''}
       />
     );
 
@@ -200,26 +213,33 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   }
 
   const formattedValue = value ? formatValue(value) : 'Clic para editar';
-  const shouldTruncate = maxWidth && value && formattedValue.length > 20; // Truncate if longer than 20 chars
 
   return (
     <div
       onClick={onEdit}
       className="cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2 -my-1 transition-colors group relative"
-      title={shouldTruncate ? formattedValue : "Clic para editar"}
       style={maxWidth ? { maxWidth } : undefined}
+      onMouseEnter={() => isTruncated && setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
     >
       <span 
-        className={`${!value && 'text-gray-400 italic'} ${shouldTruncate ? 'block truncate' : ''}`}
+        ref={textRef}
+        className={`${!value && 'text-gray-400 italic'} ${maxWidth ? 'block truncate' : ''}`}
       >
         {formattedValue}
       </span>
       
-      {/* Tooltip for full content */}
-      {shouldTruncate && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 max-w-xs whitespace-normal shadow-lg">
+      {showTooltip && isTruncated && (
+        <div 
+          className="fixed px-2 py-1 text-sm text-white bg-gray-800 rounded shadow-lg whitespace-nowrap pointer-events-none"
+          style={{
+            zIndex: 9999,
+            top: '10px',
+            left: '50%',
+            transform: 'translateX(-50%)'
+          }}
+        >
           {formattedValue}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
         </div>
       )}
       

@@ -27,7 +27,7 @@ export const validatePhone = (phone: string | null, required: boolean = false): 
     return { isValid: false, error: 'El teléfono es demasiado largo' };
   }
 
-  // Allow common formats: +34123456789, 123456789, etc.
+  // Allow common formats: 123456789, etc.
   const cleanPhone = trimmedPhone.replace(/[\s\-\(\)]/g, '');
   if (!/^[\+]?[\d]+$/.test(cleanPhone)) {
     return { isValid: false, error: 'El teléfono solo puede contener números, espacios, guiones y paréntesis' };

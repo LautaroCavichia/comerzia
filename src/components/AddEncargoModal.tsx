@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import DatePicker from 'react-datepicker';
-import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import { useDatabase } from '../context/DatabaseContext';
 import { Persona, Producto, Laboratorio, Almacen } from '../types';
 import { validateEncargoForm, checkPotentialDuplicate, sanitizeInput } from '../lib/validation';
@@ -113,9 +112,18 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
 
   const normalizePhoneNumber = (phone: string): string => {
     try {
-      if (isValidPhoneNumber(phone, 'ES')) {
-        const phoneNumber = parsePhoneNumber(phone, 'ES');
-        return phoneNumber.format('E.164');
+      // Simply clean and format Spanish phone numbers without international prefix
+      const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+      if (cleaned.match(/^[679]\d{8}$/)) {
+        // Valid Spanish mobile/landline format
+        return cleaned;
+      }
+      // If it starts with +34, remove it
+      if (cleaned.startsWith('+34')) {
+        const withoutPrefix = cleaned.substring(3);
+        if (withoutPrefix.match(/^[679]\d{8}$/)) {
+          return withoutPrefix;
+        }
       }
     } catch (error) {
       console.error('Error parsing phone number:', error);
@@ -429,7 +437,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                   <input
                     {...register('telefono')}
                     type="tel"
-                    placeholder="+34 612 345 678"
+                    placeholder="612 345 678"
                     className="w-full px-4 py-3.5 bg-white/70 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all text-sm font-light backdrop-blur-sm"
                   />
                   {errors.telefono && (
@@ -519,7 +527,7 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 <div className="space-y-2">
                   <label className="flex items-center text-sm font-light text-stone-700">
                     <span className="text-blue-500 mr-1">○</span>
-                    Precio Pagado (€)
+                    Señal (€)
                   </label>
                   <div className="relative">
                     <input

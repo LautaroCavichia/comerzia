@@ -279,7 +279,7 @@ export const MainApp: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-[110rem] mx-auto px-4 sm:px-6 lg:px-8 py-6">
               <EncargosView />
             </div>
           )}

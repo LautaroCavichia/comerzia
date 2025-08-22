@@ -372,6 +372,9 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                 <span className="transition-colors duration-200 hover:text-orange-600">Recibido</span>
               </th>
               <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 tracking-wider">
+                <span className="transition-colors duration-200 hover:text-orange-600">Avisado</span>
+              </th>
+              <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 tracking-wider">
                 <span className="transition-colors duration-200 hover:text-orange-600">Entregado</span>
               </th>
               <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 tracking-wider group">
@@ -389,9 +392,6 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </div>
-              </th>
-              <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 tracking-wider">
-                <span className="transition-colors duration-200 hover:text-orange-600">Avisado</span>
               </th>
               <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 tracking-wider">
                 <span className="transition-colors duration-200 hover:text-orange-600">Señal (€)</span>
@@ -502,6 +502,15 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                 <td className="px-3 py-3 whitespace-nowrap text-center">
                   <div className="flex justify-center transform transition-transform duration-200 group-hover:scale-105">
                     <ToggleCell
+                      value={encargo.avisado}
+                      onChange={(value) => handleCellEdit(encargo.id, 'avisado', value)}
+                    />
+                  </div>
+                </td>
+                
+                <td className="px-3 py-3 whitespace-nowrap text-center">
+                  <div className="flex justify-center transform transition-transform duration-200 group-hover:scale-105">
+                    <ToggleCell
                       value={encargo.entregado}
                       onChange={(value) => handleWorkflowToggle(encargo, 'entregado', value)}
                     />
@@ -527,15 +536,6 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
                     type="tel"
                     field="telefono"
                   />
-                </td>
-                
-                <td className="px-3 py-3 whitespace-nowrap text-center">
-                  <div className="flex justify-center transform transition-transform duration-200 group-hover:scale-105">
-                    <ToggleCell
-                      value={encargo.avisado}
-                      onChange={(value) => handleCellEdit(encargo.id, 'avisado', value)}
-                    />
-                  </div>
                 </td>
                 
                 <td className="px-3 py-3 whitespace-nowrap text-center group-hover:scale-[1.01] transition-transform duration-200">

@@ -31,6 +31,12 @@ interface OrderTimeData {
   completed: number;
 }
 
+interface LaboratoryStat {
+  name: string;
+  count: number;
+  percentage: number;
+}
+
 export const Dashboard: React.FC = () => {
   const { db } = useDatabase();
   const [encargos, setEncargos] = useState<Encargo[]>([]);
@@ -152,6 +158,25 @@ export const Dashboard: React.FC = () => {
     return Object.values(customerStats)
       .sort((a, b) => b.orderCount - a.orderCount)
       .slice(0, 10);
+  }, [encargos]);
+
+  const laboratoryStats: LaboratoryStat[] = useMemo(() => {
+    const laboratoryCounts = encargos.reduce((acc, encargo) => {
+      const lab = encargo.laboratorio || 'Sin laboratorio';
+      acc[lab] = (acc[lab] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const totalOrders = encargos.length;
+    
+    return Object.entries(laboratoryCounts)
+      .map(([name, count]) => ({
+        name,
+        count,
+        percentage: (count / totalOrders) * 100
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
   }, [encargos]);
 
   const COLORS = ['#f97316', '#fb923c', '#fdba74', '#fed7aa', '#ffedd5', '#ea580c', '#c2410c', '#9a3412'];
@@ -315,33 +340,85 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Detailed Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {/* Product Distribution */}
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
           <h3 className="text-lg font-light text-stone-800 mb-4">Distribución de Productos</h3>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
                 data={topProducts.slice(0, 6)}
                 cx="50%"
                 cy="50%"
-                outerRadius={80}
+                outerRadius={70}
                 dataKey="count"
-                label={({ name, percentage }) => `${name} (${percentage.toFixed(1)}%)`}
-                labelLine={false}
-                fontSize={10}
               >
-                {topProducts.slice(0, 6).map((entry, index) => (
+                {topProducts.slice(0, 6).map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
+          <div className="mt-4 space-y-2 max-h-32 overflow-y-auto">
+            {topProducts.slice(0, 6).map((product, index) => (
+              <div key={product.name} className="flex items-center justify-between text-sm">
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  ></div>
+                  <span className="text-stone-700 font-light truncate max-w-24">{product.name}</span>
+                </div>
+                <div className="flex space-x-2 text-stone-600">
+                  <span>{product.count}</span>
+                  <span>({product.percentage.toFixed(1)}%)</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Laboratory Distribution */}
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+          <h3 className="text-lg font-light text-stone-800 mb-4">Distribución de Laboratorios</h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie
+                data={laboratoryStats.slice(0, 6)}
+                cx="50%"
+                cy="50%"
+                outerRadius={70}
+                dataKey="count"
+              >
+                {laboratoryStats.slice(0, 6).map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="mt-4 space-y-2 max-h-32 overflow-y-auto">
+            {laboratoryStats.slice(0, 6).map((lab, index) => (
+              <div key={lab.name} className="flex items-center justify-between text-sm">
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  ></div>
+                  <span className="text-stone-700 font-light truncate max-w-24">{lab.name}</span>
+                </div>
+                <div className="flex space-x-2 text-stone-600">
+                  <span>{lab.count}</span>
+                  <span>({lab.percentage.toFixed(1)}%)</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Top Customers */}
-        <div className="lg:col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+        <div className="xl:col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
           <h3 className="text-lg font-light text-stone-800 mb-4">Mejores Clientes</h3>
           <div className="space-y-4">
             {topCustomers.slice(0, 6).map((customer, index) => (

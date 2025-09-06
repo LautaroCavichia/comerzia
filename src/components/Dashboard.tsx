@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { useDatabase } from '../context/DatabaseContext';
 import { Encargo } from '../types';
 
@@ -282,159 +282,149 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="w-full">
         {/* Orders Over Time */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
-          <h3 className="text-lg font-light text-stone-800 mb-4">Encargos en el Tiempo</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={ordersOverTime}>
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-200">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-xl font-light text-stone-800">Encargos en el Tiempo</h3>
+              <p className="text-sm text-stone-600 font-light">Evolución mensual de pedidos</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                <span className="text-sm text-stone-700 font-light">Total</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-stone-700 font-light">Entregados</span>
+              </div>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={350}>
+            <AreaChart data={ordersOverTime} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+              <defs>
+                <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#f97316" stopOpacity={0.05}/>
+                </linearGradient>
+                <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-              <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
-              <YAxis stroke="#6b7280" fontSize={12} />
+              <XAxis 
+                dataKey="month" 
+                stroke="#64748b" 
+                fontSize={12} 
+                tick={{ fill: '#64748b' }}
+                axisLine={{ stroke: '#e5e7eb' }}
+              />
+              <YAxis 
+                stroke="#64748b" 
+                fontSize={12}
+                tick={{ fill: '#64748b' }}
+                axisLine={{ stroke: '#e5e7eb' }}
+              />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb', 
+                  backgroundColor: 'white', 
+                  border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                 }}
               />
-              <Line type="monotone" dataKey="orders" stroke="#f97316" strokeWidth={3} dot={{ fill: '#f97316', r: 4 }} />
-              <Line type="monotone" dataKey="completed" stroke="#10b981" strokeWidth={2} dot={{ fill: '#10b981', r: 3 }} />
-            </LineChart>
+              <Area 
+                type="monotone" 
+                dataKey="orders" 
+                stroke="#f97316" 
+                strokeWidth={3}
+                fill="url(#colorOrders)"
+                dot={{ fill: '#f97316', r: 4 }}
+                activeDot={{ r: 6, fill: '#f97316' }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="completed" 
+                stroke="#10b981" 
+                strokeWidth={2}
+                fill="url(#colorCompleted)"
+                dot={{ fill: '#10b981', r: 3 }}
+                activeDot={{ r: 5, fill: '#10b981' }}
+              />
+            </AreaChart>
           </ResponsiveContainer>
-        </div>
-
-        {/* Operational Efficiency */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
-          <h3 className="text-lg font-light text-stone-800 mb-4">Eficiencia Operacional</h3>
-          <div className="space-y-6">
-            {/* Processing Time Metrics */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                <div className="text-lg font-light text-blue-600 mb-1">
-                  {encargos.filter(e => !e.pedido && !e.recibido && !e.entregado).length}
-                </div>
-                <div className="text-xs text-blue-700 font-light">Sin Procesar</div>
-              </div>
-              <div className="text-center p-3 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl border border-yellow-100">
-                <div className="text-lg font-light text-yellow-600 mb-1">
-                  {encargos.filter(e => e.pedido && !e.recibido).length}
-                </div>
-                <div className="text-xs text-yellow-700 font-light">En Proceso</div>
-              </div>
-              <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-100">
-                <div className="text-lg font-light text-purple-600 mb-1">
-                  {encargos.filter(e => e.recibido && !e.entregado).length}
-                </div>
-                <div className="text-xs text-purple-700 font-light">Listo p/Entrega</div>
-              </div>
-            </div>
-            
-            {/* Processing Pipeline */}
-            <div>
-              <h4 className="text-md font-light text-stone-700 mb-3">Pipeline de Procesamiento</h4>
-              <div className="space-y-3">
-                {/* Stage: Pending Orders */}
-                <div className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg border border-red-100">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                    <span className="text-sm font-light text-stone-800">Órdenes Estancadas</span>
-                  </div>
-                  <div className="text-sm font-light text-red-600">
-                    {encargos.filter(e => {
-                      const daysSinceOrder = (new Date().getTime() - new Date(e.fecha).getTime()) / (1000 * 60 * 60 * 24);
-                      return !e.pedido && daysSinceOrder > 3;
-                    }).length} órdenes
-                  </div>
-                </div>
-                
-                {/* Stage: Laboratory Bottleneck */}
-                <div className="flex items-center justify-between p-3 bg-orange-50/50 rounded-lg border border-orange-100">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
-                    <span className="text-sm font-light text-stone-800">Esperando Laboratorio</span>
-                  </div>
-                  <div className="text-sm font-light text-orange-600">
-                    {encargos.filter(e => e.pedido && !e.recibido).length} órdenes
-                  </div>
-                </div>
-                
-                {/* Stage: Ready for Delivery */}
-                <div className="flex items-center justify-between p-3 bg-green-50/50 rounded-lg border border-green-100">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                    <span className="text-sm font-light text-stone-800">Listo para Entrega</span>
-                  </div>
-                  <div className="text-sm font-light text-green-600">
-                    {encargos.filter(e => e.recibido && !e.entregado).length} órdenes
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Efficiency Insights */}
-            <div className="pt-2 border-t border-stone-100">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <div className="text-lg font-light text-stone-800">
-                    {encargos.length > 0 ? Math.round((encargos.filter(e => e.entregado).length / encargos.length) * 100) : 0}%
-                  </div>
-                  <div className="text-xs text-stone-600 font-light">Tasa Completación</div>
-                </div>
-                <div>
-                  <div className="text-lg font-light text-stone-800">
-                    {encargos.filter(e => e.pedido && !e.recibido).length > 0 ? 
-                      Math.round(encargos.filter(e => e.pedido && !e.recibido).length / 
-                      (encargos.filter(e => e.pedido).length || 1) * 100) : 0}%
-                  </div>
-                  <div className="text-xs text-stone-600 font-light">En Labs</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Detailed Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Product/Lab Distribution */}
-        <div className="lg:col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
-          <h3 className="text-lg font-light text-stone-800 mb-4">Distribución Producto/Laboratorio</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={productLabStats.slice(0, 6)}
-                cx="50%"
-                cy="50%"
-                outerRadius={70}
-                dataKey="count"
-              >
-                {productLabStats.slice(0, 6).map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+        <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-stone-200">
+          <div className="mb-6">
+            <h3 className="text-xl font-light text-stone-800">Distribución Producto/Laboratorio</h3>
+            <p className="text-sm text-stone-600 font-light">Análisis de productos más solicitados</p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={productLabStats.slice(0, 6)}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    innerRadius={30}
+                    dataKey="count"
+                    paddingAngle={1}
+                  >
+                    {productLabStats.slice(0, 6).map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            
+            <div>
+              <h4 className="text-lg font-light text-stone-800 mb-4">Detalles</h4>
+              <div className="space-y-3">
+                {productLabStats.slice(0, 6).map((item, index) => (
+                  <div key={item.name} className="flex items-center justify-between p-3 hover:bg-stone-50 rounded-lg transition-colors duration-200">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div 
+                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      ></div>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-sm font-light text-stone-800 break-words block" title={item.name}>
+                          {item.product}
+                        </span>
+                        <span className="text-xs text-stone-600 font-light block">
+                          {item.laboratory}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end space-y-1 flex-shrink-0 ml-3">
+                      <span className="text-sm text-stone-800">{item.count}</span>
+                      <span className="text-xs text-stone-600">
+                        {item.percentage.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
                 ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
-            {productLabStats.slice(0, 8).map((item, index) => (
-              <div key={item.name} className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-2 flex-1 min-w-0">
-                  <div 
-                    className="w-3 h-3 rounded-full flex-shrink-0" 
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  ></div>
-                  <span className="text-stone-700 font-light break-words" title={item.name}>
-                    {item.name}
-                  </span>
-                </div>
-                <div className="flex space-x-2 text-stone-600 flex-shrink-0 ml-2">
-                  <span>{item.count}</span>
-                  <span>({item.percentage.toFixed(1)}%)</span>
-                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
 

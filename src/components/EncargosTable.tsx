@@ -175,7 +175,7 @@ export const EncargosTable: React.FC<EncargosTableProps> = ({
     if (notificationModal) {
       if (shouldSend) {
         console.log('Sending notification to:', notificationModal.client.nombre);
-        // Update both recibido and avisado when notification is sent
+        // Update both recibido and avisado when notification is sent (email or WhatsApp)
         await handleCellEdit(notificationModal.order.id, 'recibido', true);
         await handleCellEdit(notificationModal.order.id, 'avisado', true);
       } else {

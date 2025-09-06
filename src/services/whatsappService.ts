@@ -65,8 +65,15 @@ export class WhatsAppService {
     const phone = this.formatPhoneNumber(client.telefono);
     const message = this.buildWhatsAppMessage(order, client);
     
-    // Encode the message for URL
-    const encodedMessage = encodeURIComponent(message);
+    // More robust URL encoding for WhatsApp compatibility
+    // Replace special characters that can cause issues with message prefilling
+    const cleanMessage = message
+      .replace(/\n/g, '%0A') // Explicit newline encoding
+      .replace(/\r/g, '') // Remove carriage returns
+      .trim(); // Remove leading/trailing whitespace
+    
+    const encodedMessage = encodeURIComponent(cleanMessage)
+      .replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase()); // Extra encoding for special chars
     
     // WhatsApp Web URL format
     return `https://wa.me/${phone.replace('+', '')}?text=${encodedMessage}`;

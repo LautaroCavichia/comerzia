@@ -41,8 +41,8 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   const handleWhatsAppNotification = () => {
     const success = whatsappService.openWhatsApp(order, client);
     if (success) {
-      // Mark as notified without sending email
-      onSendNotification(false);
+      // Mark as notified (WhatsApp notification sent)
+      onSendNotification(true);
       onClose();
     } else {
       alert('Error al abrir WhatsApp. Verifica el número de teléfono.');

@@ -31,8 +31,10 @@ interface OrderTimeData {
   completed: number;
 }
 
-interface LaboratoryStat {
+interface ProductLabStat {
   name: string;
+  product: string;
+  laboratory: string;
   count: number;
   percentage: number;
 }
@@ -160,20 +162,28 @@ export const Dashboard: React.FC = () => {
       .slice(0, 10);
   }, [encargos]);
 
-  const laboratoryStats: LaboratoryStat[] = useMemo(() => {
-    const laboratoryCounts = encargos.reduce((acc, encargo) => {
+  const productLabStats: ProductLabStat[] = useMemo(() => {
+    const productLabCounts = encargos.reduce((acc, encargo) => {
+      const product = encargo.producto;
       const lab = encargo.laboratorio || 'Sin laboratorio';
-      acc[lab] = (acc[lab] || 0) + 1;
+      const key = `${product} - ${lab}`;
+      acc[key] = {
+        product,
+        laboratory: lab,
+        count: (acc[key]?.count || 0) + 1
+      };
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<string, { product: string; laboratory: string; count: number }>);
 
     const totalOrders = encargos.length;
     
-    return Object.entries(laboratoryCounts)
-      .map(([name, count]) => ({
-        name,
-        count,
-        percentage: (count / totalOrders) * 100
+    return Object.entries(productLabCounts)
+      .map(([key, data]) => ({
+        name: key,
+        product: data.product,
+        laboratory: data.laboratory,
+        count: data.count,
+        percentage: (data.count / totalOrders) * 100
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
@@ -340,77 +350,41 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Detailed Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* Product Distribution */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
-          <h3 className="text-lg font-light text-stone-800 mb-4">Distribución de Productos</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Product/Lab Distribution */}
+        <div className="lg:col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+          <h3 className="text-lg font-light text-stone-800 mb-4">Distribución Producto/Laboratorio</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
-                data={topProducts.slice(0, 6)}
+                data={productLabStats.slice(0, 6)}
                 cx="50%"
                 cy="50%"
                 outerRadius={70}
                 dataKey="count"
               >
-                {topProducts.slice(0, 6).map((_, index) => (
+                {productLabStats.slice(0, 6).map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
-          <div className="mt-4 space-y-2 max-h-32 overflow-y-auto">
-            {topProducts.slice(0, 6).map((product, index) => (
-              <div key={product.name} className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-2">
+          <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+            {productLabStats.slice(0, 8).map((item, index) => (
+              <div key={item.name} className="flex items-center justify-between text-sm">
+                <div className="flex items-center space-x-2 flex-1 min-w-0">
                   <div 
-                    className="w-3 h-3 rounded-full" 
+                    className="w-3 h-3 rounded-full flex-shrink-0" 
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   ></div>
-                  <span className="text-stone-700 font-light truncate max-w-24">{product.name}</span>
+                  <span className="text-stone-700 font-light break-words" title={item.name}>
+                    {item.name}
+                  </span>
                 </div>
-                <div className="flex space-x-2 text-stone-600">
-                  <span>{product.count}</span>
-                  <span>({product.percentage.toFixed(1)}%)</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Laboratory Distribution */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
-          <h3 className="text-lg font-light text-stone-800 mb-4">Distribución de Laboratorios</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={laboratoryStats.slice(0, 6)}
-                cx="50%"
-                cy="50%"
-                outerRadius={70}
-                dataKey="count"
-              >
-                {laboratoryStats.slice(0, 6).map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="mt-4 space-y-2 max-h-32 overflow-y-auto">
-            {laboratoryStats.slice(0, 6).map((lab, index) => (
-              <div key={lab.name} className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  ></div>
-                  <span className="text-stone-700 font-light truncate max-w-24">{lab.name}</span>
-                </div>
-                <div className="flex space-x-2 text-stone-600">
-                  <span>{lab.count}</span>
-                  <span>({lab.percentage.toFixed(1)}%)</span>
+                <div className="flex space-x-2 text-stone-600 flex-shrink-0 ml-2">
+                  <span>{item.count}</span>
+                  <span>({item.percentage.toFixed(1)}%)</span>
                 </div>
               </div>
             ))}
@@ -418,7 +392,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Top Customers */}
-        <div className="xl:col-span-2 bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
           <h3 className="text-lg font-light text-stone-800 mb-4">Mejores Clientes</h3>
           <div className="space-y-4">
             {topCustomers.slice(0, 6).map((customer, index) => (

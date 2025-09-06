@@ -12,11 +12,6 @@ interface DashboardMetrics {
   ordersGrowth: number;
 }
 
-interface ProductStat {
-  name: string;
-  count: number;
-  percentage: number;
-}
 
 interface CustomerStat {
   name: string;
@@ -120,23 +115,6 @@ export const Dashboard: React.FC = () => {
     return monthsData;
   }, [encargos, timeRange]);
 
-  const topProducts: ProductStat[] = useMemo(() => {
-    const productCounts = encargos.reduce((acc, encargo) => {
-      acc[encargo.producto] = (acc[encargo.producto] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const totalOrders = encargos.length;
-    
-    return Object.entries(productCounts)
-      .map(([name, count]) => ({
-        name,
-        count,
-        percentage: (count / totalOrders) * 100
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8);
-  }, [encargos]);
 
   const topCustomers: CustomerStat[] = useMemo(() => {
     const customerStats = encargos.reduce((acc, encargo) => {
@@ -327,25 +305,94 @@ export const Dashboard: React.FC = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Top Products */}
+        {/* Operational Efficiency */}
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-stone-200">
-          <h3 className="text-lg font-light text-stone-800 mb-4">Productos Más Solicitados</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={topProducts.slice(0, 6)} layout="horizontal">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-              <XAxis type="number" stroke="#6b7280" fontSize={12} />
-              <YAxis dataKey="name" type="category" stroke="#6b7280" fontSize={11} width={80} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb', 
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                }}
-              />
-              <Bar dataKey="count" fill="#f97316" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <h3 className="text-lg font-light text-stone-800 mb-4">Eficiencia Operacional</h3>
+          <div className="space-y-6">
+            {/* Processing Time Metrics */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                <div className="text-lg font-light text-blue-600 mb-1">
+                  {encargos.filter(e => !e.pedido && !e.recibido && !e.entregado).length}
+                </div>
+                <div className="text-xs text-blue-700 font-light">Sin Procesar</div>
+              </div>
+              <div className="text-center p-3 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl border border-yellow-100">
+                <div className="text-lg font-light text-yellow-600 mb-1">
+                  {encargos.filter(e => e.pedido && !e.recibido).length}
+                </div>
+                <div className="text-xs text-yellow-700 font-light">En Proceso</div>
+              </div>
+              <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-100">
+                <div className="text-lg font-light text-purple-600 mb-1">
+                  {encargos.filter(e => e.recibido && !e.entregado).length}
+                </div>
+                <div className="text-xs text-purple-700 font-light">Listo p/Entrega</div>
+              </div>
+            </div>
+            
+            {/* Processing Pipeline */}
+            <div>
+              <h4 className="text-md font-light text-stone-700 mb-3">Pipeline de Procesamiento</h4>
+              <div className="space-y-3">
+                {/* Stage: Pending Orders */}
+                <div className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg border border-red-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                    <span className="text-sm font-light text-stone-800">Órdenes Estancadas</span>
+                  </div>
+                  <div className="text-sm font-light text-red-600">
+                    {encargos.filter(e => {
+                      const daysSinceOrder = (new Date().getTime() - new Date(e.fecha).getTime()) / (1000 * 60 * 60 * 24);
+                      return !e.pedido && daysSinceOrder > 3;
+                    }).length} órdenes
+                  </div>
+                </div>
+                
+                {/* Stage: Laboratory Bottleneck */}
+                <div className="flex items-center justify-between p-3 bg-orange-50/50 rounded-lg border border-orange-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
+                    <span className="text-sm font-light text-stone-800">Esperando Laboratorio</span>
+                  </div>
+                  <div className="text-sm font-light text-orange-600">
+                    {encargos.filter(e => e.pedido && !e.recibido).length} órdenes
+                  </div>
+                </div>
+                
+                {/* Stage: Ready for Delivery */}
+                <div className="flex items-center justify-between p-3 bg-green-50/50 rounded-lg border border-green-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                    <span className="text-sm font-light text-stone-800">Listo para Entrega</span>
+                  </div>
+                  <div className="text-sm font-light text-green-600">
+                    {encargos.filter(e => e.recibido && !e.entregado).length} órdenes
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Efficiency Insights */}
+            <div className="pt-2 border-t border-stone-100">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <div className="text-lg font-light text-stone-800">
+                    {encargos.length > 0 ? Math.round((encargos.filter(e => e.entregado).length / encargos.length) * 100) : 0}%
+                  </div>
+                  <div className="text-xs text-stone-600 font-light">Tasa Completación</div>
+                </div>
+                <div>
+                  <div className="text-lg font-light text-stone-800">
+                    {encargos.filter(e => e.pedido && !e.recibido).length > 0 ? 
+                      Math.round(encargos.filter(e => e.pedido && !e.recibido).length / 
+                      (encargos.filter(e => e.pedido).length || 1) * 100) : 0}%
+                  </div>
+                  <div className="text-xs text-stone-600 font-light">En Labs</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -9,6 +9,7 @@ export interface Encargo {
   entregado: boolean;
   persona: string;
   telefono: string | null;
+  persona_id: string;
   avisado: boolean;
   pagado: number;
   observaciones?: string;
@@ -50,6 +51,6 @@ export interface Almacen {
   created_at: Date;
 }
 
-export type NewEncargo = Omit<Encargo, 'id' | 'created_at' | 'updated_at'>;
+export type NewEncargo = Omit<Encargo, 'id' | 'created_at' | 'updated_at' | 'persona_id'>;
 export type NewEncargoForm = Omit<NewEncargo, 'selling_point'>;
 export type UpdateEncargo = Partial<NewEncargo> & { id: string };

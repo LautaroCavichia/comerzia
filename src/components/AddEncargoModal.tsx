@@ -73,7 +73,6 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
     }
   });
 
-  const watchedPersona = watch('persona');
   const watchedFecha = watch('fecha');
 
   const loadCatalogs = useCallback(async () => {
@@ -98,17 +97,29 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
     loadCatalogs();
   }, [loadCatalogs]);
 
+  // State for client selection mode
+  const [clientSelectionMode, setClientSelectionMode] = useState<'existing' | 'new'>('existing');
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string>('');
+
   useEffect(() => {
-    if (watchedPersona) {
-      const persona = personas.find(p => p.nombre === watchedPersona);
+    if (clientSelectionMode === 'existing' && selectedPersonaId) {
+      const persona = personas.find(p => p.id === selectedPersonaId);
       if (persona) {
+        setValue('persona', persona.nombre);
         setValue('telefono', persona.telefono || '');
         setValue('email', persona.email || '');
         setValue('phone_notifications', persona.phone_notifications || false);
         setValue('email_notifications', persona.email_notifications || false);
       }
+    } else if (clientSelectionMode === 'new') {
+      // Clear fields for new client
+      setValue('persona', '');
+      setValue('telefono', '');
+      setValue('email', '');
+      setValue('phone_notifications', false);
+      setValue('email_notifications', false);
     }
-  }, [watchedPersona, personas, setValue]);
+  }, [clientSelectionMode, selectedPersonaId, personas, setValue]);
 
   const normalizePhoneNumber = (phone: string): string => {
     try {
@@ -132,16 +143,51 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
   };
 
   const onSubmit = async (data: EncargoFormData) => {
+    // Validate client selection
+    if (clientSelectionMode === 'existing' && !selectedPersonaId) {
+      alert('Debe seleccionar un cliente existente');
+      return;
+    }
+    if (clientSelectionMode === 'new' && !data.persona?.trim()) {
+      alert('Debe ingresar el nombre del nuevo cliente');
+      return;
+    }
+
     setLoading(true);
     try {
+      // Get the actual persona data based on selection mode
+      let personaName = '';
+      let personaTelefono = null;
+      let personaEmail = '';
+      let phoneNotifications = false;
+      let emailNotifications = false;
+
+      if (clientSelectionMode === 'existing') {
+        const selectedPersona = personas.find(p => p.id === selectedPersonaId);
+        if (selectedPersona) {
+          personaName = selectedPersona.nombre;
+          personaTelefono = selectedPersona.telefono;
+          personaEmail = selectedPersona.email || '';
+          phoneNotifications = selectedPersona.phone_notifications;
+          emailNotifications = selectedPersona.email_notifications;
+        }
+      } else {
+        // New client mode
+        personaName = data.persona;
+        personaTelefono = data.telefono && data.telefono.trim() ? data.telefono.trim() : null;
+        personaEmail = data.email || '';
+        phoneNotifications = data.phone_notifications;
+        emailNotifications = data.email_notifications;
+      }
+
       // Sanitize all text inputs and convert empty strings to null
       const sanitizedData = {
         ...data,
         producto: sanitizeInput(data.producto),
         laboratorio: data.laboratorio && data.laboratorio.trim() ? sanitizeInput(data.laboratorio) : null,
         almacen: data.almacen && data.almacen.trim() ? sanitizeInput(data.almacen) : null,
-        persona: sanitizeInput(data.persona),
-        telefono: data.telefono && data.telefono.trim() ? sanitizeInput(data.telefono) : null,
+        persona: sanitizeInput(personaName),
+        telefono: personaTelefono,
         observaciones: data.observaciones ? sanitizeInput(data.observaciones) : undefined
       };
 
@@ -267,28 +313,6 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
         const laboratorios = await db.getLaboratorios();
         setLaboratorios(laboratorios);
         setValue('laboratorio', name);
-      } else if (type === 'persona') {
-        const telefono = prompt('Ingrese el teléfono (opcional):');
-        
-        const email = prompt('Ingrese el email (opcional):');
-        const phoneNotifications = telefono ? window.confirm('¿Activar notificaciones por WhatsApp?') : false;
-        const emailNotifications = !!email && window.confirm('¿Activar notificaciones por email?');
-        
-        const normalizedPhone = telefono ? normalizePhoneNumber(telefono) : null;
-        await db.createPersonaWithNotifications({
-          nombre: name,
-          telefono: normalizedPhone,
-          email: email || undefined,
-          phone_notifications: phoneNotifications,
-          email_notifications: emailNotifications
-        });
-        const personas = await db.getPersonas();
-        setPersonas(personas);
-        setValue('persona', name);
-        setValue('telefono', normalizedPhone || '');
-        setValue('email', email || '');
-        setValue('phone_notifications', phoneNotifications);
-        setValue('email_notifications', emailNotifications);
       } else if (type === 'almacen') {
         await db.createAlmacen(name);
         const almacenes = await db.getAlmacenes();
@@ -386,37 +410,153 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 </div>
               </div>
 
-              {/* Contact Info Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-                <div className="space-y-2">
+              {/* Client Selection */}
+              <div className="space-y-6">
+                {/* Client Selection Mode Toggle */}
+                <div className="space-y-3">
                   <label className="flex items-center text-sm font-light text-stone-700">
                     <span className="text-red-500 mr-1">*</span>
-                    Persona
+                    Cliente
                   </label>
-                  <div className="relative">
-                    <input
-                      {...register('persona')}
-                      list="personas"
-                      className="w-full px-4 py-3.5 pr-20 bg-white/70 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300 transition-all text-sm font-light backdrop-blur-sm"
-                      placeholder="Escribir o seleccionar persona"
-                    />
-                    <datalist id="personas">
-                      {personas.map(persona => (
-                        <option key={persona.id} value={persona.nombre} />
-                      ))}
-                    </datalist>
+                  <div className="flex space-x-3">
                     <button
                       type="button"
-                      onClick={() => handleNewItem('persona')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-light text-orange-600 hover:text-orange-700 hover:bg-orange-50/80 rounded-lg transition-colors"
+                      onClick={() => setClientSelectionMode('existing')}
+                      className={`px-4 py-2 rounded-xl text-sm font-light transition-all ${
+                        clientSelectionMode === 'existing'
+                          ? 'bg-orange-100 text-orange-700 border-2 border-orange-300'
+                          : 'bg-gray-100 text-gray-600 border-2 border-gray-200 hover:bg-gray-200'
+                      }`}
                     >
-                      + Nueva
+                      Cliente Existente
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setClientSelectionMode('new')}
+                      className={`px-4 py-2 rounded-xl text-sm font-light transition-all ${
+                        clientSelectionMode === 'new'
+                          ? 'bg-orange-100 text-orange-700 border-2 border-orange-300'
+                          : 'bg-gray-100 text-gray-600 border-2 border-gray-200 hover:bg-gray-200'
+                      }`}
+                    >
+                      + Nuevo Cliente
                     </button>
                   </div>
-                  {errors.persona && (
-                    <p className="text-xs text-red-500">{errors.persona.message}</p>
-                  )}
                 </div>
+
+                {/* Existing Client Selection */}
+                {clientSelectionMode === 'existing' && (
+                  <div className="space-y-3">
+                    <label className="text-sm font-light text-stone-600">
+                      Seleccionar cliente existente
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedPersonaId}
+                        onChange={(e) => setSelectedPersonaId(e.target.value)}
+                        className="w-full px-4 py-3.5 pr-12 bg-white/90 backdrop-blur-xl border-2 border-orange-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300/40 focus:border-orange-300 transition-all duration-300 text-sm font-light shadow-sm hover:shadow-md appearance-none cursor-pointer"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 247, 237, 0.8) 100%)',
+                          backdropFilter: 'blur(20px)',
+                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(249, 115, 22, 0.05)'
+                        }}
+                      >
+                        <option value="" className="text-stone-500">-- Seleccionar Cliente --</option>
+                        {personas.map(persona => (
+                          <option key={persona.id} value={persona.id} className="text-stone-700">
+                            {persona.nombre} {persona.telefono ? `(${persona.telefono})` : '(sin teléfono)'}
+                          </option>
+                        ))}
+                      </select>
+                      {/* Custom dropdown arrow */}
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                    {/* Selected client preview */}
+                    {selectedPersonaId && (
+                      <div className="p-3 rounded-xl bg-orange-50/80 backdrop-blur-sm border border-orange-200/50">
+                        {(() => {
+                          const selected = personas.find(p => p.id === selectedPersonaId);
+                          if (!selected) return null;
+                          return (
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                                <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-medium text-stone-800">{selected.nombre}</div>
+                                <div className="text-sm text-stone-600 flex items-center space-x-4">
+                                  {selected.telefono && (
+                                    <span className="flex items-center space-x-1">
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                      </svg>
+                                      <span>{selected.telefono}</span>
+                                    </span>
+                                  )}
+                                  {selected.email && (
+                                    <span className="flex items-center space-x-1">
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                      </svg>
+                                      <span>{selected.email}</span>
+                                    </span>
+                                  )}
+                                  {!selected.telefono && !selected.email && (
+                                    <span className="text-stone-400 italic">Sin información de contacto</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                    {clientSelectionMode === 'existing' && !selectedPersonaId && (
+                      <p className="text-xs text-red-500 flex items-center space-x-1">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span>Debe seleccionar un cliente</span>
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* New Client Fields */}
+                {clientSelectionMode === 'new' && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-light text-stone-600">
+                        Nombre del nuevo cliente *
+                      </label>
+                      <input
+                        {...register('persona')}
+                        className="w-full px-4 py-3.5 bg-white/70 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
+                        placeholder="Nombre completo"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-light text-stone-600">
+                        Teléfono (opcional)
+                      </label>
+                      <input
+                        {...register('telefono')}
+                        type="tel"
+                        className="w-full px-4 py-3.5 bg-white/70 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-all text-sm font-light backdrop-blur-sm"
+                        placeholder="Ej: 612345678"
+                      />
+                    </div>
+                  </div>
+                )}
+                {errors.persona && (
+                  <p className="text-xs text-red-500">{errors.persona.message}</p>
+                )}
               </div>
             </div>
 
@@ -427,23 +567,8 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 <h3 className="text-lg font-light text-stone-800">Campos Opcionales</h3>
               </div>
               
-              {/* Telefono, Lab and Storage Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm font-light text-stone-700">
-                    <span className="text-blue-500 mr-1">○</span>
-                    Teléfono
-                  </label>
-                  <input
-                    {...register('telefono')}
-                    type="tel"
-                    placeholder="612 345 678"
-                    className="w-full px-4 py-3.5 bg-white/70 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all text-sm font-light backdrop-blur-sm"
-                  />
-                  {errors.telefono && (
-                    <p className="text-xs text-red-500">{errors.telefono.message}</p>
-                  )}
-                </div>
+              {/* Lab and Storage Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
                 <div className="space-y-2">
                   <label className="flex items-center text-sm font-light text-stone-700">

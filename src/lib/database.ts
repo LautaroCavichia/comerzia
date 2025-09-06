@@ -155,15 +155,25 @@ export class DatabaseService {
 
   async createEncargo(encargo: NewEncargoForm): Promise<Encargo> {
     return safeDbOperation(async () => {
+      // Find or create persona and get their ID
+      const personaIdResult = await sql`
+        SELECT find_or_create_persona(
+          ${encargo.persona}, 
+          ${encargo.telefono}, 
+          ${this.sellingPoint}
+        ) as persona_id
+      `;
+      const personaId = personaIdResult[0].persona_id;
+
       const result = await sql`
         INSERT INTO encargos (
           fecha, producto, laboratorio, almacen, pedido, recibido, entregado,
-          persona, telefono, avisado, pagado, observaciones, selling_point
+          persona, telefono, avisado, pagado, observaciones, selling_point, persona_id
         ) VALUES (
           ${encargo.fecha}, ${encargo.producto}, ${encargo.laboratorio}, 
           ${encargo.almacen}, ${encargo.pedido}, ${encargo.recibido}, ${encargo.entregado},
           ${encargo.persona}, ${encargo.telefono}, ${encargo.avisado}, 
-          ${encargo.pagado}, ${encargo.observaciones}, ${this.sellingPoint}
+          ${encargo.pagado}, ${encargo.observaciones}, ${this.sellingPoint}, ${personaId}
         ) RETURNING *
       `;
       const row = result[0];
@@ -321,55 +331,17 @@ export class DatabaseService {
   }
 
   async updatePersonaName(id: string, newName: string): Promise<void> {
-    await sql`BEGIN`;
-    try {
-      const oldPersona = await sql`
-        SELECT nombre, telefono FROM personas 
-        WHERE id = ${id} AND selling_point = ${this.sellingPoint}
-      `;
-      
-      if (oldPersona.length === 0) {
-        throw new Error('Persona not found');
-      }
-
-      const oldName = oldPersona[0].nombre;
-      
-      // Update persona name
-      await sql`
-        UPDATE personas 
-        SET nombre = ${newName}, updated_at = NOW()
-        WHERE id = ${id} AND selling_point = ${this.sellingPoint}
-      `;
-
-      // Update all related encargos with the new name
-      await sql`
-        UPDATE encargos 
-        SET persona = ${newName}, updated_at = NOW()
-        WHERE persona = ${oldName} AND selling_point = ${this.sellingPoint}
-      `;
-
-      await sql`COMMIT`;
-    } catch (error) {
-      await sql`ROLLBACK`;
-      throw error;
-    }
+    // Simple update - the database trigger will handle cascading to encargos
+    await sql`
+      UPDATE personas 
+      SET nombre = ${newName}, updated_at = NOW()
+      WHERE id = ${id} AND selling_point = ${this.sellingPoint}
+    `;
   }
 
   async updatePersonaPhone(id: string, newPhone: string | null): Promise<void> {
-    await sql`BEGIN`;
-    try {
-      const oldPersona = await sql`
-        SELECT nombre, telefono FROM personas 
-        WHERE id = ${id} AND selling_point = ${this.sellingPoint}
-      `;
-      
-      if (oldPersona.length === 0) {
-        throw new Error('Persona not found');
-      }
-
-      const oldPhone = oldPersona[0].telefono;
-      
-      // Check for duplicate phone numbers
+    // Check for duplicate phone numbers first
+    if (newPhone !== null) {
       const existing = await sql`
         SELECT id FROM personas 
         WHERE telefono = ${newPhone} AND selling_point = ${this.sellingPoint} AND id != ${id}
@@ -378,35 +350,14 @@ export class DatabaseService {
       if (existing.length > 0) {
         throw new Error('Phone number already exists for another person');
       }
-
-      // Update persona phone
-      await sql`
-        UPDATE personas 
-        SET telefono = ${newPhone}, updated_at = NOW()
-        WHERE id = ${id} AND selling_point = ${this.sellingPoint}
-      `;
-
-      // Update all related encargos with the new phone
-      // Handle NULL values properly
-      if (oldPhone === null) {
-        await sql`
-          UPDATE encargos 
-          SET telefono = ${newPhone}, updated_at = NOW()
-          WHERE telefono IS NULL AND selling_point = ${this.sellingPoint}
-        `;
-      } else {
-        await sql`
-          UPDATE encargos 
-          SET telefono = ${newPhone}, updated_at = NOW()
-          WHERE telefono = ${oldPhone} AND selling_point = ${this.sellingPoint}
-        `;
-      }
-
-      await sql`COMMIT`;
-    } catch (error) {
-      await sql`ROLLBACK`;
-      throw error;
     }
+
+    // Simple update - the database trigger will handle cascading to encargos
+    await sql`
+      UPDATE personas 
+      SET telefono = ${newPhone}, updated_at = NOW()
+      WHERE id = ${id} AND selling_point = ${this.sellingPoint}
+    `;
   }
 
   async updatePersonaComplete(id: string, data: {
@@ -715,21 +666,11 @@ export class DatabaseService {
     } as Persona;
   }
 
-  // Get all encargos for a specific persona (consistent lookup)
+  // Get all encargos for a specific persona (using persona_id for accuracy)
   async getEncargosForPersona(personaId: string): Promise<Encargo[]> {
-    const persona = await sql`
-      SELECT nombre, telefono FROM personas 
-      WHERE id = ${personaId} AND selling_point = ${this.sellingPoint}
-    `;
-
-    if (persona.length === 0) return [];
-
-    const { nombre, telefono } = persona[0];
-
     const result = await sql`
       SELECT * FROM encargos 
-      WHERE selling_point = ${this.sellingPoint} 
-      AND (persona = ${nombre} OR telefono = ${telefono})
+      WHERE persona_id = ${personaId} AND selling_point = ${this.sellingPoint}
       ORDER BY fecha DESC, created_at DESC
     `;
 

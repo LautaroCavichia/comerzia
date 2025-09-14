@@ -39,6 +39,7 @@ export const Dashboard: React.FC = () => {
   const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'6m' | '1y' | 'all'>('6m');
+  const [showFullDistribution, setShowFullDistribution] = useState(false);
 
   const loadEncargos = useCallback(async () => {
     try {
@@ -142,32 +143,73 @@ export const Dashboard: React.FC = () => {
 
   const productLabStats: ProductLabStat[] = useMemo(() => {
     const productLabCounts = encargos.reduce((acc, encargo) => {
-      const product = encargo.producto;
-      const lab = encargo.laboratorio || 'Sin laboratorio';
-      const key = `${product} - ${lab}`;
-      acc[key] = {
-        product,
-        laboratory: lab,
-        count: (acc[key]?.count || 0) + 1
-      };
+      // Validate and normalize product name
+      const product = encargo.producto?.toString().trim() || 'Producto sin nombre';
+      const lab = encargo.laboratorio?.toString().trim() || 'Sin laboratorio';
+
+      // Use JSON.stringify to create unambiguous keys that handle special characters
+      const key = JSON.stringify({ product, laboratory: lab });
+
+      if (!acc[key]) {
+        acc[key] = {
+          product,
+          laboratory: lab,
+          count: 0
+        };
+      }
+      acc[key].count++;
+
       return acc;
     }, {} as Record<string, { product: string; laboratory: string; count: number }>);
 
     const totalOrders = encargos.length;
-    
-    return Object.entries(productLabCounts)
-      .map(([key, data]) => ({
-        name: key,
+
+    const productStats = Object.entries(productLabCounts)
+      .map(([, data]) => ({
+        name: `${data.product} - ${data.laboratory}`, // Display name remains user-friendly
         product: data.product,
         laboratory: data.laboratory,
         count: data.count,
-        percentage: (data.count / totalOrders) * 100
+        percentage: totalOrders > 0 ? (data.count / totalOrders) * 100 : 0
       }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8);
-  }, [encargos]);
+      .sort((a, b) => b.count - a.count);
 
-  const COLORS = ['#f97316', '#fb923c', '#fdba74', '#fed7aa', '#ffedd5', '#ea580c', '#c2410c', '#9a3412'];
+    return showFullDistribution ? productStats : productStats.slice(0, 8);
+  }, [encargos, showFullDistribution]);
+
+  const COLORS = ['#f97316', '#fb923c', '#fdba74', '#fed7aa', '#ffedd5', '#ea580c', '#c2410c', '#9a3412', '#7c2d12', '#451a03', '#fb7c4c', '#fda172', '#fdba84', '#fdd8b5', '#fef3e2', '#dc460a'];
+
+  const handleExportDistributionCSV = () => {
+    if (productLabStats.length === 0) {
+      alert('No hay datos para exportar');
+      return;
+    }
+
+    const csvHeaders = [
+      'Producto', 'Laboratorio', 'Cantidad', 'Porcentaje (%)'
+    ];
+
+    const csvData = productLabStats.map(item => [
+      item.product,
+      item.laboratory,
+      item.count.toString(),
+      item.percentage.toFixed(2)
+    ]);
+
+    const csvContent = [csvHeaders, ...csvData]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `distribucion-producto-laboratorio-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (loading) {
     return (
@@ -362,9 +404,52 @@ export const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Product/Lab Distribution */}
         <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-stone-200">
-          <div className="mb-6">
-            <h3 className="text-xl font-light text-stone-800">Distribución Producto/Laboratorio</h3>
-            <p className="text-sm text-stone-600 font-light">Análisis de productos más solicitados</p>
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h3 className="text-xl font-light text-stone-800">Distribución Producto/Laboratorio</h3>
+              <p className="text-sm text-stone-600 font-light">Análisis de productos más solicitados</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowFullDistribution(!showFullDistribution)}
+                className={`inline-flex items-center px-3 py-2.5 text-sm font-light rounded-xl transition-all duration-300 border transform hover:scale-105 hover:shadow-sm ${
+                  showFullDistribution
+                    ? 'bg-gradient-to-r from-orange-50 to-orange-100/70 border-orange-300/60 text-orange-700 shadow-sm'
+                    : 'bg-gradient-to-r from-white/80 to-gray-50/70 border-gray-300/60 text-gray-600 hover:from-gray-50 hover:to-gray-100/70 hover:border-gray-400/60'
+                }`}
+                style={{
+                  backdropFilter: 'blur(8px)'
+                }}
+              >
+                <svg className="w-4 h-4 mr-2 transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+                <span>{showFullDistribution ? 'Ver resumen' : 'Ver todo'}</span>
+                <span className={`ml-2 px-2 py-0.5 text-xs rounded-full transition-all duration-200 ${
+                  showFullDistribution
+                    ? 'bg-orange-200/60 text-orange-700'
+                    : 'bg-gray-200/60 text-gray-600'
+                }`}>
+                  {productLabStats.length}
+                </span>
+              </button>
+
+              <button
+                onClick={handleExportDistributionCSV}
+                className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-light text-stone-700 border transition-all duration-300 shadow-sm transform hover:scale-105 hover:shadow-md group"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 247, 237, 0.8) 100%)',
+                  backdropFilter: 'blur(12px)',
+                  borderColor: 'rgba(255, 255, 255, 0.3)'
+                }}
+              >
+                <svg className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span className="transition-colors duration-200 group-hover:text-stone-800">Exportar CSV</span>
+              </button>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -398,8 +483,8 @@ export const Dashboard: React.FC = () => {
             
             <div>
               <h4 className="text-lg font-light text-stone-800 mb-4">Detalles</h4>
-              <div className="space-y-3">
-                {productLabStats.slice(0, 6).map((item, index) => (
+              <div className={`space-y-3 ${showFullDistribution ? 'max-h-96 overflow-y-auto' : ''}`}>
+                {(showFullDistribution ? productLabStats : productLabStats.slice(0, 6)).map((item, index) => (
                   <div key={item.name} className="flex items-center justify-between p-3 hover:bg-stone-50 rounded-lg transition-colors duration-200">
                     <div className="flex items-center space-x-3 flex-1 min-w-0">
                       <div 

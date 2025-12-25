@@ -100,6 +100,16 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
   // State for client selection mode
   const [clientSelectionMode, setClientSelectionMode] = useState<'existing' | 'new'>('existing');
   const [selectedPersonaId, setSelectedPersonaId] = useState<string>('');
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
+
+  // Filter personas by name or phone number
+  const filteredPersonas = personas.filter(persona => {
+    if (!clientSearchQuery.trim()) return true;
+    const query = clientSearchQuery.toLowerCase().trim();
+    const nameMatch = persona.nombre.toLowerCase().includes(query);
+    const phoneMatch = persona.telefono?.toLowerCase().includes(query) || false;
+    return nameMatch || phoneMatch;
+  });
 
   useEffect(() => {
     if (clientSelectionMode === 'existing' && selectedPersonaId) {
@@ -448,33 +458,76 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                 {clientSelectionMode === 'existing' && (
                   <div className="space-y-3">
                     <label className="text-sm font-light text-stone-600">
-                      Seleccionar cliente existente
+                      Buscar y seleccionar cliente existente
                     </label>
+                    
+                    {/* Search Input */}
                     <div className="relative">
-                      <select
-                        value={selectedPersonaId}
-                        onChange={(e) => setSelectedPersonaId(e.target.value)}
-                        className="w-full px-4 py-3.5 pr-12 bg-white/90 backdrop-blur-xl border-2 border-orange-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300/40 focus:border-orange-300 transition-all duration-300 text-sm font-light shadow-sm hover:shadow-md appearance-none cursor-pointer"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 247, 237, 0.8) 100%)',
-                          backdropFilter: 'blur(20px)',
-                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(249, 115, 22, 0.05)'
-                        }}
-                      >
-                        <option value="" className="text-stone-500">-- Seleccionar Cliente --</option>
-                        {personas.map(persona => (
-                          <option key={persona.id} value={persona.id} className="text-stone-700">
-                            {persona.nombre} {persona.telefono ? `(${persona.telefono})` : '(sin teléfono)'}
-                          </option>
-                        ))}
-                      </select>
-                      {/* Custom dropdown arrow */}
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                       </div>
+                      <input
+                        type="text"
+                        value={clientSearchQuery}
+                        onChange={(e) => setClientSearchQuery(e.target.value)}
+                        placeholder="Buscar por nombre o teléfono..."
+                        className="w-full pl-10 pr-10 py-3 bg-white/70 border-2 border-orange-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300/40 focus:border-orange-300 transition-all text-sm font-light backdrop-blur-sm"
+                      />
+                      {clientSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setClientSearchQuery('')}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-stone-600 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
+
+                    {/* Client List */}
+                    <div className="max-h-48 overflow-y-auto rounded-xl border-2 border-orange-200/50 bg-white/90 backdrop-blur-xl">
+                      {filteredPersonas.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-stone-500 font-light">
+                          {clientSearchQuery ? `No se encontraron clientes con "${clientSearchQuery}"` : 'No hay clientes registrados'}
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-stone-100">
+                          {filteredPersonas.map(persona => (
+                            <button
+                              key={persona.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedPersonaId(persona.id);
+                                setClientSearchQuery('');
+                              }}
+                              className={`w-full px-4 py-3 text-left transition-all duration-200 hover:bg-orange-50 ${
+                                selectedPersonaId === persona.id ? 'bg-orange-100' : ''
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="text-sm font-medium text-stone-800">{persona.nombre}</div>
+                                  <div className="text-xs text-stone-500">
+                                    {persona.telefono || 'Sin teléfono'}
+                                    {persona.email && ` • ${persona.email}`}
+                                  </div>
+                                </div>
+                                {selectedPersonaId === persona.id && (
+                                  <svg className="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     {/* Selected client preview */}
                     {selectedPersonaId && (
                       <div className="p-3 rounded-xl bg-orange-50/80 backdrop-blur-sm border border-orange-200/50">
@@ -512,6 +565,16 @@ export const AddEncargoModal: React.FC<AddEncargoModalProps> = ({
                                   )}
                                 </div>
                               </div>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPersonaId('')}
+                                className="text-stone-400 hover:text-stone-600 transition-colors"
+                                title="Deseleccionar cliente"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
                             </div>
                           );
                         })()}
